@@ -356,10 +356,6 @@ html,body{height:100%;width:100%;overflow:hidden;background:#5b7fd4;font-family:
     <div class="snd-dot on" id="sndDot">♪</div>
     <span id="sndLbl">Sonido encendido</span>
   </div>
-  <div class="snd-toggle" onclick="toggleMusic()">
-    <div class="snd-dot on" id="musicDot">🎵</div>
-    <span id="musicLbl">Música encendida</span>
-  </div>
   <div class="ios-install-hint" id="iosInstallHint" style="display:none">
     📲 Para instalar: toca <strong>Compartir</strong> → <strong>Agregar a inicio</strong>
   </div>
@@ -624,94 +620,10 @@ function snd_tick(){tone(260,'triangle',.03,.06);}
 function snd_levelup(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,'sine',.15,.12,i*.055));}
 function snd_start(){[523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,'triangle',.1,.1),i*80));}
 function snd_grab(){tone(440,'sine',.06,.1);}
+function snd_dragmove(){tone(520,'sine',.025,.045);}
+function snd_dragblocked(){tone(180,'square',.03,.05);}
 
 /* ═════════════════════════════════════
-   AMBIENT BACKGROUND MUSIC
-   Generative looping pad — calm arpeggio over
-   a slow chord progression, designed to relax.
-   100% synthesized, no audio files needed.
-═════════════════════════════════════ */
-let musicOn=true;
-let musicNodes=[];
-let musicTimer=null;
-let musicMasterGain=null;
-
-const MUSIC_CHORDS=[
-  [261.63,329.63,392.00,493.88], // Cmaj7
-  [220.00,277.18,329.63,440.00], // Am7
-  [196.00,246.94,293.66,392.00], // Gmaj7-ish
-  [174.61,220.00,261.63,349.23], // Fmaj7
-];
-let musicChordIdx=0;
-let musicStepIdx=0;
-
-function startMusic(){
-  if(!musicOn) return;
-  if(AC===null) getAC();
-  const ac=getAC();
-  if(ac.state==='suspended') ac.resume();
-  if(musicTimer) return; // already running
-
-  musicMasterGain=ac.createGain();
-  musicMasterGain.gain.value=0;
-  musicMasterGain.connect(ac.destination);
-  // fade in
-  musicMasterGain.gain.linearRampToValueAtTime(0.05, ac.currentTime+1.5);
-
-  const stepDur=0.9; // seconds per arpeggio note
-  function playStep(){
-    if(!musicOn || !musicMasterGain) return;
-    const chord=MUSIC_CHORDS[musicChordIdx];
-    const note=chord[musicStepIdx % chord.length];
-    const ac2=getAC();
-    const o=ac2.createOscillator(), g=ac2.createGain(), f=ac2.createBiquadFilter();
-    f.type='lowpass'; f.frequency.value=1400;
-    o.type='sine'; o.frequency.value=note;
-    o.connect(f); f.connect(g); g.connect(musicMasterGain);
-    const t=ac2.currentTime;
-    g.gain.setValueAtTime(0,t);
-    g.gain.linearRampToValueAtTime(0.7,t+0.15);
-    g.gain.exponentialRampToValueAtTime(0.0001,t+stepDur*1.8);
-    o.start(t); o.stop(t+stepDur*2);
-
-    // soft sub pad on chord change
-    if(musicStepIdx===0){
-      const o2=ac2.createOscillator(), g2=ac2.createGain();
-      o2.type='triangle'; o2.frequency.value=chord[0]/2;
-      o2.connect(g2); g2.connect(musicMasterGain);
-      g2.gain.setValueAtTime(0,t);
-      g2.gain.linearRampToValueAtTime(0.35,t+0.5);
-      g2.gain.exponentialRampToValueAtTime(0.0001,t+stepDur*4);
-      o2.start(t); o2.stop(t+stepDur*4);
-    }
-
-    musicStepIdx++;
-    if(musicStepIdx>=4){ musicStepIdx=0; musicChordIdx=(musicChordIdx+1)%MUSIC_CHORDS.length; }
-  }
-  playStep();
-  musicTimer=setInterval(playStep, stepDur*1000);
-}
-
-function stopMusic(){
-  if(musicTimer){ clearInterval(musicTimer); musicTimer=null; }
-  if(musicMasterGain){
-    try{
-      const ac=getAC();
-      musicMasterGain.gain.linearRampToValueAtTime(0, ac.currentTime+0.6);
-      setTimeout(()=>{ musicMasterGain=null; },700);
-    }catch(e){ musicMasterGain=null; }
-  }
-}
-
-function toggleMusic(){
-  musicOn=!musicOn;
-  const dot=document.getElementById('musicDot');
-  const lbl=document.getElementById('musicLbl');
-  if(dot) dot.className='snd-dot'+(musicOn?' on':'');
-  if(lbl) lbl.textContent=musicOn?'Música encendida':'Música silenciada';
-  if(musicOn) startMusic(); else stopMusic();
-}
-
 /* ═════════════════════════════════════
    BACKGROUND
 ═════════════════════════════════════ */
@@ -934,6 +846,7 @@ function startDrag(pieceIdx,startX,startY){
   snd_grab();
   drag.active=true;drag.pieceIdx=pieceIdx;drag.piece={...pieces[pieceIdx]};
   drag.cx=startX;drag.cy=startY;
+  drag.dropR=undefined;drag.dropC=undefined;drag.canDrop=undefined;
   selIdx=null;
   /* Build drag canvas sized to piece */
   const sh=drag.piece.shape;
@@ -977,12 +890,18 @@ function updateGhostFromDrag(screenX,screenY){
   /* figure out which cell the center of piece would land on */
   const anchorR=Math.round((by-PAD)/(CELL+GAP)-rows/2+.5);
   const anchorC=Math.round((bx-PAD)/(CELL+GAP)-cols/2+.5);
+  const prevR=drag.dropR, prevC=drag.dropC, prevCanDrop=drag.canDrop;
   ghostCells=[];
   if(canPlace(sh,anchorR,anchorC)){
     sh.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)ghostCells.push([anchorR+dr,anchorC+dc]);}));
     drag.dropR=anchorR;drag.dropC=anchorC;drag.canDrop=true;
   } else {
     drag.canDrop=false;drag.dropR=anchorR;drag.dropC=anchorC;
+  }
+  /* play a subtle tick only when moving into a new cell, distinct sound if blocked */
+  if(prevR!==anchorR||prevC!==anchorC){
+    if(drag.canDrop) snd_dragmove();
+    else if(prevCanDrop!==false) snd_dragblocked();
   }
 }
 
@@ -1633,7 +1552,7 @@ function switchScreen(toId, onShown){
   }
 }
 
-function showSplash(){ switchScreen('splashScreen'); gameActive=false; cancelDrag(); stopMusic(); }
+function showSplash(){ switchScreen('splashScreen'); gameActive=false; cancelDrag(); }
 function showRank(){ switchScreen('rankScreen', ()=>{ rankTab='all'; setTab('all'); }); }
 function showAchievements(){ switchScreen('achScreen', renderAchievementsList); }
 function showMissions(){
@@ -2115,7 +2034,6 @@ function startGame(){
   gameActive=true;
   updatePips();renderPieces();drawGrid();
   snd_start();notify('⚡ NEXO INICIADO — ¡SUERTE, '+nick+'!');
-  startMusic();
 }
 
 /* ═════════════════════════════════════
