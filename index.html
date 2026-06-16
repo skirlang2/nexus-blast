@@ -962,23 +962,16 @@ function positionDrag(screenX,screenY){
   const sh=drag.piece.shape,rows=sh.length,cols=sh[0].length;
   const CS=CELL+6,GP=3;
   const dw=cols*CS+(cols-1)*GP,dh=rows*CS+(rows-1)*GP;
-  /* center piece horizontally on finger, raise it above finger */
+  /* center piece exactly on finger/cursor position */
   dragCanv.style.left=(screenX-dw/2)+'px';
-  dragCanv.style.top=(screenY-dh-30)+'px';
+  dragCanv.style.top=(screenY-dh/2)+'px';
 }
 
 function updateGhostFromDrag(screenX,screenY){
-  /* map screen position to board cell */
+  /* map screen position to board cell - piece is centered directly on finger/cursor */
   const rect=gc.getBoundingClientRect();
   const scaleX=GW/rect.width,scaleY=GH/rect.height;
   const sh=drag.piece.shape,rows=sh.length,cols=sh[0].length;
-  /* center of piece should be at finger */
-  const CS=CELL+6,GP=3;
-  const dw=cols*CS+(cols-1)*GP,dh=rows*CS+(rows-1)*GP;
-  /* finger maps to center of piece on board */
-  const boardX=(screenX-rect.left)*scaleX;
-  const boardY=(screenY-dh/2-30+dh/2-rect.top)*scaleY; // keep piece centered
-  /* simpler: map finger tip to board */
   const bx=(screenX-rect.left)*scaleX;
   const by=(screenY-rect.top)*scaleY;
   /* figure out which cell the center of piece would land on */
@@ -989,9 +982,7 @@ function updateGhostFromDrag(screenX,screenY){
     sh.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)ghostCells.push([anchorR+dr,anchorC+dc]);}));
     drag.dropR=anchorR;drag.dropC=anchorC;drag.canDrop=true;
   } else {
-    /* try nearby cells */
     drag.canDrop=false;drag.dropR=anchorR;drag.dropC=anchorC;
-    // highlight invalid ghost as red tint?
   }
 }
 
