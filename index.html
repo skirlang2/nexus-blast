@@ -1,0 +1,2188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Nexus Blast">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#5b7fd4">
+<meta name="description" content="El puzzle de bloques más épico del universo cuántico. Relájate, fluye y domina el Nexo.">
+<title>NEXUS BLAST 2070</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+html,body{height:100%;width:100%;overflow:hidden;background:#5b7fd4;font-family:'Rajdhani',sans-serif;color:#fff}
+:root{
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+#app{position:fixed;inset:0;display:flex;justify-content:center;align-items:flex-start;overflow:hidden;z-index:1}
+#bgCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;background:linear-gradient(160deg,#6f8fe0 0%,#5b7fd4 45%,#4a6bc4 100%)}
+#fxLayer{position:fixed;inset:0;pointer-events:none;z-index:80;overflow:hidden}
+#goCanvas{position:fixed;inset:0;pointer-events:none;z-index:88;width:100%;height:100%}
+.screen{width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;align-items:center;position:relative;z-index:2;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.hidden{display:none!important}
+.screen.entering{animation:screenIn .38s cubic-bezier(.22,1,.36,1) both}
+.screen.leaving{animation:screenOut .26s cubic-bezier(.4,0,.6,1) both}
+@keyframes screenIn{
+  0%{opacity:0;transform:scale(.96) translateY(14px)}
+  100%{opacity:1;transform:scale(1) translateY(0)}
+}
+@keyframes screenOut{
+  0%{opacity:1;transform:scale(1) translateY(0)}
+  100%{opacity:0;transform:scale(.97) translateY(-10px)}
+}
+
+/* NOTIFICATIONS */
+.notif{position:fixed;top:calc(14px + var(--safe-top));left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(20,20,50,.95);border:1px solid rgba(100,200,255,.4);border-radius:14px;padding:10px 22px;z-index:300;transition:transform .4s cubic-bezier(.34,1.56,.64,1);font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;color:#7af0ff;text-align:center;box-shadow:0 0 24px rgba(100,200,255,.2);white-space:nowrap}
+.notif.show{transform:translateX(-50%) translateY(0)}
+
+/* FX */
+.score-pop{position:absolute;font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;pointer-events:none;white-space:nowrap;text-shadow:0 0 10px currentColor;animation:popUp .9s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes popUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.8)}}
+.combo-txt{position:absolute;font-family:'Orbitron',sans-serif;font-weight:900;pointer-events:none;text-align:center;width:100%;left:0;animation:comboAnim 1s cubic-bezier(.22,1,.36,1) forwards;text-shadow:0 0 40px currentColor,0 0 80px currentColor;letter-spacing:3px}
+@keyframes comboAnim{0%{opacity:0;font-size:0;transform:translateY(5px)}18%{opacity:1;font-size:42px;transform:translateY(0)}65%{opacity:1;font-size:36px;transform:translateY(-22px)}100%{opacity:0;font-size:28px;transform:translateY(-52px)}}
+.particle-burst{position:absolute;border-radius:50%;pointer-events:none;animation:burstAnim .75s ease forwards}
+@keyframes burstAnim{0%{opacity:1;width:8px;height:8px;transform:translate(0,0)}100%{opacity:0;width:3px;height:3px;transform:translate(var(--tx),var(--ty))}}
+
+/* ══ SPLASH ══ */
+#splashScreen{justify-content:flex-start;align-items:center;padding:calc(var(--safe-top) + 24px) 22px calc(var(--safe-bottom) + 20px);gap:0;min-height:100%}
+.logo-wrap{text-align:center;margin-bottom:4px}
+.logo-main{font-family:'Orbitron',sans-serif;font-size:clamp(30px,8.5vw,44px);font-weight:900;letter-spacing:4px;line-height:1;animation:logoPulse 3s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{filter:drop-shadow(0 0 8px rgba(255,255,255,.4))}50%{filter:drop-shadow(0 0 22px rgba(255,225,119,.7))}}
+.logo-sub{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:8px;color:rgba(255,255,255,.55);text-align:center;margin-top:5px;text-transform:uppercase}
+.splash-demo{width:100%;max-width:340px;height:130px;border-radius:20px;overflow:hidden;margin:18px 0 14px;position:relative;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+#splashCanvas{display:block;width:100%;height:100%;border-radius:20px}
+.splash-tagline{font-size:14px;color:rgba(255,255,255,.75);text-align:center;margin-bottom:18px;letter-spacing:.8px;line-height:1.8;text-shadow:0 1px 2px rgba(0,0,0,.15)}
+.nick-wrap{width:100%;max-width:320px;margin-bottom:14px}
+.nick-label{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:3px;color:#ffe177;margin-bottom:8px;text-align:center}
+.nick-inp{width:100%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:14px 20px;color:#fff;font-family:'Orbitron',sans-serif;font-size:16px;text-align:center;outline:none;letter-spacing:3px;text-transform:uppercase;transition:border-color .3s,box-shadow .3s}
+.nick-inp:focus{border-color:rgba(255,255,255,.7);box-shadow:0 0 24px rgba(255,255,255,.2)}
+.nick-inp::placeholder{color:rgba(255,255,255,.4);text-transform:none;font-size:13px;letter-spacing:1px}
+.splash-btns{width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px}
+.sbtn{border:none;border-radius:16px;padding:16px;font-family:'Orbitron',sans-serif;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:2px;width:100%;transition:all .3s;position:relative;overflow:hidden}
+.sbtn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.18),transparent);border-radius:16px}
+.sbtn.prim{background:linear-gradient(135deg,#5cd65c,#3aab3a);color:#fff;box-shadow:0 8px 24px rgba(58,171,58,.35)}
+.sbtn.sec{background:linear-gradient(135deg,#a05ce0,#7a3bbf);color:#fff;box-shadow:0 8px 24px rgba(122,59,191,.3)}
+.sbtn.tert{background:linear-gradient(135deg,#f5933b,#d4701a);color:#fff;box-shadow:0 8px 22px rgba(212,112,26,.25)}
+.sbtn.quat{background:linear-gradient(135deg,#f5296e,#c2185b);color:#fff;box-shadow:0 8px 22px rgba(194,24,91,.25)}
+.sbtn.quin{background:linear-gradient(135deg,#4a90e8,#2f6bc4);color:#fff;box-shadow:0 8px 22px rgba(47,107,196,.25)}
+.sbtn.install{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;box-shadow:none}
+.ios-install-hint{
+  margin-top:12px;max-width:320px;width:100%;text-align:center;
+  font-size:11px;color:rgba(255,255,255,.65);letter-spacing:.5px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  border-radius:12px;padding:10px 14px;line-height:1.6;
+}
+.ios-install-hint strong{color:#ffe177}
+.sbtn:hover{filter:brightness(1.1);transform:translateY(-2px)}
+.sbtn:active{transform:scale(.96)}
+.snd-toggle{display:flex;align-items:center;gap:10px;margin-top:14px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.6);letter-spacing:1px;padding:8px;transition:color .2s}
+.snd-dot{width:20px;height:20px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .3s}
+.snd-dot.on{border-color:#ffe177;background:rgba(255,225,119,.2);color:#ffe177}
+
+/* ══ GAME HUD ══ */
+#gameScreen{padding-top:calc(var(--safe-top) + 4px);padding-bottom:calc(var(--safe-bottom) + 6px);justify-content:flex-start;min-height:100%}
+
+/* Block Blast style header: crown+best on left, big score center, settings gear right */
+.bb-header{
+  width:100%;padding:18px 20px 8px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.bb-best{
+  display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);
+  border-radius:20px;padding:7px 16px;font-family:'Orbitron',sans-serif;
+  font-size:15px;font-weight:700;color:#ffe177;
+}
+.bb-crown{font-size:18px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+.bb-score{
+  font-family:'Orbitron',sans-serif;font-size:34px;font-weight:900;color:#fff;
+  text-shadow:0 2px 6px rgba(0,0,0,.2);letter-spacing:1px;flex:1;text-align:center;
+  transition:transform .15s;
+}
+.bb-score.bump{animation:hudBump .25s ease}
+.bb-extra-toggle{
+  background:rgba(255,255,255,.16);border:none;border-radius:50%;
+  width:38px;height:38px;font-size:17px;color:#fff;cursor:pointer;
+  transition:all .25s;flex-shrink:0;
+}
+.bb-extra-toggle.open{background:rgba(255,255,255,.32);transform:rotate(90deg)}
+
+/* Collapsible extras panel — combos, level, power-ups (Nexus Blast plus) */
+.bb-extras{
+  width:100%;overflow:hidden;max-height:0;
+  transition:max-height .35s cubic-bezier(.4,0,.2,1);
+}
+.bb-extras.open{max-height:340px}
+
+.hud-row{width:100%;padding:6px 12px 3px;display:flex;gap:5px}
+.hud-card{flex:1;background:rgba(255,255,255,.14);border-radius:12px;border:1px solid rgba(255,255,255,.18);padding:6px 7px;text-align:center;position:relative;overflow:hidden}
+.hud-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;opacity:.6;background:rgba(255,255,255,.5)}
+.hud-lbl{font-family:'Orbitron',sans-serif;font-size:7px;letter-spacing:2px;color:rgba(255,255,255,.55);text-transform:uppercase}
+.hud-val{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:700;margin-top:1px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.2)}
+.hud-card.sc .hud-val{color:#ffe177}.hud-card.bst .hud-val{color:#fff}.hud-card.cmb .hud-val{color:#ff9ec2}.hud-card.lvl .hud-val{color:#9bffa0}
+.hud-card.bump{animation:hudBump .25s ease}
+@keyframes hudBump{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+/* XP */
+.xp-wrap{width:100%;padding:0 12px 3px}
+.xp-meta{display:flex;justify-content:space-between;font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.5);margin-bottom:3px}
+.xp-bg{height:5px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden;position:relative}
+.xp-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ffe177,#f5933b,#ff9ec2);transition:width .55s cubic-bezier(.4,0,.2,1);position:relative}
+.xp-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;width:30px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.7));animation:xShine 2s ease-in-out infinite}
+@keyframes xShine{0%,100%{opacity:0}50%{opacity:1}}
+
+/* GRID AREA */
+.grid-wrap{width:100%;padding:4px 12px}
+.grid-frame{border-radius:14px;padding:0;position:relative;overflow:hidden;background:#2b3563;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+#gameCanvas{display:block;border-radius:12px;width:100%!important;touch-action:none}
+
+/* DRAG PIECE FLOATING CANVAS */
+#dragCanvas{
+  position:fixed;pointer-events:none;z-index:500;
+  display:none;border-radius:10px;
+  filter:drop-shadow(0 0 16px rgba(80,200,255,.5));
+}
+
+/* PIECES */
+.pieces-wrap{width:100%;padding:3px 12px 3px}
+.pieces-hd{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:4px;color:rgba(255,255,255,.4);text-align:center;margin-bottom:5px;text-transform:uppercase}
+.pieces-row{display:flex;gap:7px}
+.pslot{flex:1;min-height:82px;background:rgba(255,255,255,.12);border-radius:16px;border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;cursor:grab;transition:all .22s;position:relative;overflow:hidden}
+.pslot::before{content:'';position:absolute;inset:0;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,.08),transparent)}
+.pslot.sel{border-color:rgba(255,255,255,.6);box-shadow:0 0 22px rgba(255,255,255,.25),inset 0 0 20px rgba(255,255,255,.1)}
+.pslot.sel::after{content:'';position:absolute;inset:0;border-radius:16px;background:radial-gradient(circle,rgba(255,255,255,.1),transparent)}
+.pslot.dragging{opacity:.3;transform:scale(.92)}
+.pslot.empty{opacity:.3;cursor:default}
+
+/* COMBO METER */
+.combo-meter{width:100%;padding:2px 12px;display:flex;align-items:center;gap:8px}
+.combo-meter-lbl{font-family:'Orbitron',sans-serif;font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.4);white-space:nowrap}
+.combo-pips{display:flex;gap:3px;flex:1}
+.combo-pip{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,.15);transition:all .3s}
+.combo-pip.active{background:#ff9ec2;box-shadow:0 0 6px #ff9ec2}
+.combo-pip.super{background:#ffe177;box-shadow:0 0 8px #ffe177;animation:pipPulse .5s ease-in-out infinite alternate}
+@keyframes pipPulse{from{transform:scaleY(1)}to{transform:scaleY(1.6)}}
+
+/* PU HINT */
+.pu-hint{width:100%;padding:2px 12px;text-align:center;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:3px;color:#ffe177;opacity:0;transition:opacity .3s;text-transform:uppercase}
+.pu-hint.show{opacity:1;animation:pulseHint 1.2s ease-in-out infinite}
+.pu-hint.show{opacity:1}
+@keyframes pulseHint{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* PU */
+.pu-wrap{width:100%;padding:3px 12px 5px;display:flex;gap:6px}
+.pu-btn{flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:7px 4px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.pu-btn::before{content:'';position:absolute;inset:0;border-radius:12px;opacity:0;transition:opacity .25s}
+.pu-btn.quantum::before{background:radial-gradient(circle,rgba(74,144,232,.3),transparent)}
+.pu-btn.void::before{background:radial-gradient(circle,rgba(160,92,224,.3),transparent)}
+.pu-btn.nova::before{background:radial-gradient(circle,rgba(245,41,110,.3),transparent)}
+.pu-btn.freeze::before{background:radial-gradient(circle,rgba(245,197,66,.3),transparent)}
+.pu-btn.active::before,.pu-btn:hover::before{opacity:1}
+.pu-btn.active{transform:scale(1.07)}
+.pu-btn.quantum.active{border-color:#4a90e8;box-shadow:0 0 18px rgba(74,144,232,.4)}
+.pu-btn.void.active{border-color:#a05ce0;box-shadow:0 0 18px rgba(160,92,224,.4)}
+.pu-btn.nova.active{border-color:#f5296e;box-shadow:0 0 18px rgba(245,41,110,.4)}
+.pu-btn.freeze.active{border-color:#f5c542;box-shadow:0 0 18px rgba(245,197,66,.4)}
+.pu-btn:active:not(.active){transform:scale(.94)}
+.pu-icon{font-size:21px;line-height:1.1}
+.pu-lbl{font-size:8px;letter-spacing:1px;color:rgba(255,255,255,.5);text-transform:uppercase;margin:2px 0}
+.pu-cnt{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700}
+.pu-btn.quantum .pu-cnt{color:#cfe6ff}.pu-btn.void .pu-cnt{color:#e6cfff}.pu-btn.nova .pu-cnt{color:#ffcfe0}.pu-btn.freeze .pu-cnt{color:#fff3cf}
+.pu-btn[disabled]{opacity:.25;pointer-events:none}
+
+/* ══ RANKING ══ */
+#rankScreen{padding:calc(var(--safe-top) + 16px) 14px calc(var(--safe-bottom) + 30px);justify-content:flex-start;min-height:100%}
+.rank-hdr{display:flex;align-items:center;gap:12px;width:100%;margin-bottom:16px;flex-shrink:0}
+.back-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:10px 16px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:11px;color:#fff;letter-spacing:1px;transition:all .2s;flex-shrink:0}
+.back-btn:hover{background:rgba(255,255,255,.22)}
+.rank-titles{flex:1}
+.rank-title{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:900;color:#ffe177;text-shadow:0 2px 6px rgba(0,0,0,.2)}
+.rank-sub2{font-size:10px;color:rgba(255,255,255,.5);letter-spacing:2px;margin-top:1px}
+.rank-tabs{display:flex;gap:6px;width:100%;margin-bottom:12px;flex-shrink:0}
+.rank-tab{flex:1;padding:9px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.5);font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:2px;cursor:pointer;transition:all .2s}
+.rank-tab.act{background:rgba(255,255,255,.22);border-color:rgba(255,255,255,.4);color:#fff}
+.rank-list{width:100%;display:flex;flex-direction:column;gap:7px}
+.rank-item{display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.12);border-radius:15px;border:1px solid rgba(255,255,255,.18);padding:11px 14px;position:relative;overflow:hidden;transition:all .3s;flex-shrink:0}
+.rank-item::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:rgba(255,255,255,.25)}
+.rank-item.me{border-color:rgba(255,255,255,.6)!important;box-shadow:0 0 18px rgba(255,255,255,.15)}
+.rank-item.gold{border-color:rgba(255,225,119,.5)}.rank-item.silver{border-color:rgba(220,220,230,.4)}.rank-item.bronze{border-color:rgba(225,160,100,.4)}
+.rank-pos{font-family:'Orbitron',sans-serif;font-size:13px;font-weight:900;min-width:28px;text-align:center}
+.rank-item.gold .rank-pos{color:#ffe177}.rank-item.silver .rank-pos{color:#e8e8f0}.rank-item.bronze .rank-pos{color:#e1a064}
+.rank-item:not(.gold):not(.silver):not(.bronze) .rank-pos{color:rgba(255,255,255,.4)}
+.rank-av{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.rank-info{flex:1;min-width:0}
+.rank-name{font-weight:700;font-size:13px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-meta{font-size:9px;color:rgba(255,255,255,.5);margin-top:2px;letter-spacing:.5px}
+.rank-right{text-align:right;flex-shrink:0}
+.rank-score{font-family:'Orbitron',sans-serif;font-size:15px;font-weight:900;color:#ffe177}
+.rank-detail{font-size:9px;color:rgba(255,255,255,.45);letter-spacing:.8px;margin-top:2px}
+.rank-empty{text-align:center;color:rgba(255,255,255,.45);padding:50px 20px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;line-height:2.2}
+.rank-source{
+  width:100%;text-align:center;font-family:'Orbitron',sans-serif;font-size:9px;
+  letter-spacing:2px;padding:8px;border-radius:10px;margin-bottom:8px;
+}
+.rank-source.global{background:rgba(92,214,92,.18);border:1px solid rgba(92,214,92,.35);color:#bdf5bd}
+.rank-source.local{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.45)}
+
+/* ══ ACHIEVEMENTS ══ */
+.ach-progress-wrap{width:100%;padding:0 14px 12px;flex-shrink:0}
+.ach-progress-lbl{font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.6);margin-bottom:6px;text-align:center}
+.ach-progress-bg{height:8px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden}
+.ach-progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#5cd65c,#9bffa0);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.ach-list{width:100%;display:flex;flex-direction:column;gap:7px}
+.ach-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.08);border-radius:15px;border:1px solid rgba(255,255,255,.12);padding:12px 14px;opacity:.55;transition:all .3s}
+.ach-item.done{opacity:1;background:rgba(255,255,255,.16);border-color:rgba(155,255,160,.4);box-shadow:0 0 16px rgba(92,214,92,.15)}
+.ach-icon{font-size:26px;flex-shrink:0;width:40px;text-align:center}
+.ach-info{flex:1;min-width:0}
+.ach-name{font-weight:700;font-size:13px;letter-spacing:.5px}
+.ach-desc{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.ach-status{font-size:18px;flex-shrink:0}
+
+/* ══ DAILY MISSIONS ══ */
+.missions-list{width:100%;display:flex;flex-direction:column;gap:10px}
+.mission-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.1);border-radius:15px;border:1px solid rgba(255,255,255,.15);padding:13px 14px;transition:all .3s}
+.mission-item.done{background:rgba(255,158,194,.18);border-color:rgba(255,158,194,.4);box-shadow:0 0 16px rgba(255,158,194,.15)}
+.mission-icon{font-size:24px;flex-shrink:0;width:36px;text-align:center}
+.mission-info{flex:1;min-width:0}
+.mission-desc{font-size:13px;font-weight:600;letter-spacing:.3px;margin-bottom:6px}
+.mission-bar-bg{height:5px;background:rgba(255,255,255,.15);border-radius:3px;overflow:hidden}
+.mission-bar-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff9ec2,#f5c542);transition:width .5s cubic-bezier(.4,0,.2,1)}
+.mission-progress{font-size:9px;color:rgba(255,255,255,.45);margin-top:4px;letter-spacing:1px;font-family:'Orbitron',sans-serif}
+.mission-status{font-size:18px;flex-shrink:0}
+
+/* ══ INTERACTIVE TUTORIAL ══ */
+.tut-card{
+  width:calc(100% - 24px);margin:6px 12px;padding:16px 18px;border-radius:16px;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;gap:14px;text-align:left;
+  animation:tutCardIn .4s cubic-bezier(.22,1,.36,1);
+}
+@keyframes tutCardIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.tut-card-icon{font-size:32px;flex-shrink:0;width:44px;text-align:center}
+.tut-card-text{font-size:14px;line-height:1.5;letter-spacing:.3px;color:#fff}
+.tut-card-text strong{color:#ffe177}
+.tut-arrow{
+  position:absolute;font-size:28px;pointer-events:none;z-index:10;
+  animation:tutArrowBounce 1s ease-in-out infinite;opacity:0;transition:opacity .3s;
+  text-shadow:0 2px 8px rgba(0,0,0,.4);
+}
+.tut-arrow.show{opacity:1}
+@keyframes tutArrowBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+.tut-footer{width:100%;display:flex;flex-direction:column;align-items:center;padding:8px 12px calc(var(--safe-bottom) + 12px)}
+.tut-cell-highlight{
+  position:absolute;border:2px solid #ffe177;border-radius:4px;pointer-events:none;
+  box-shadow:0 0 16px rgba(255,225,119,.6);animation:tutHighlightPulse 1s ease-in-out infinite;z-index:5;
+}
+@keyframes tutHighlightPulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* ══ MODALS ══ */
+.modal-bg{position:fixed;inset:0;background:rgba(10,10,26,.88);z-index:200;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-bg.show{opacity:1;pointer-events:all}
+.modal-card{background:linear-gradient(160deg,#111132,#1c0e40);border:1px solid rgba(168,85,247,.3);border-radius:26px;padding:28px 24px;width:88%;max-width:360px;text-align:center;position:relative;overflow:hidden;transform:scale(.85) translateY(18px);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.modal-bg.show .modal-card{transform:scale(1) translateY(0)}
+.modal-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#4a90e8,#a05ce0,#f5296e,#f5c542)}
+.modal-title{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:900;letter-spacing:2px;color:#fff;margin-bottom:4px;text-shadow:0 2px 6px rgba(0,0,0,.25)}
+.modal-slbl{color:rgba(255,255,255,.3);font-size:10px;letter-spacing:3px;text-transform:uppercase;font-family:'Orbitron',sans-serif}
+.modal-score{font-family:'Orbitron',sans-serif;font-size:52px;font-weight:900;color:#ffe177;margin:10px 0;text-shadow:0 1px 4px rgba(0,0,0,.25)}
+.modal-badge{display:inline-block;padding:5px 18px;border-radius:20px;font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:14px}
+.modal-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}
+.modal-stat{background:rgba(255,255,255,.05);border-radius:12px;padding:9px 4px;border:1px solid rgba(255,255,255,.08)}
+.modal-stat-lbl{font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.3);font-family:'Orbitron',sans-serif;text-transform:uppercase}
+.modal-stat-val{font-family:'Orbitron',sans-serif;font-size:16px;font-weight:700;color:#4a90e8;margin-top:3px}
+.modal-btn{border:none;border-radius:14px;padding:14px;font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:2px;width:100%;margin-top:7px;transition:all .25s;position:relative;overflow:hidden}
+.modal-btn.prim{background:linear-gradient(135deg,#5cd65c,#3aab3a);color:#fff;box-shadow:0 6px 24px rgba(58,171,58,.3)}
+.modal-btn.sec{background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff;box-shadow:0 6px 20px rgba(124,58,237,.25)}
+.modal-btn.ter{background:transparent;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.4);font-size:11px}
+.modal-btn:hover{filter:brightness(1.15);transform:translateY(-2px)}
+.modal-btn:active{transform:scale(.97)}
+
+/* TUTORIAL */
+.tut-step{display:flex;align-items:flex-start;gap:12px;text-align:left;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.tut-step:last-child{border-bottom:none}
+.tut-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.tut-text{font-size:13px;color:rgba(255,255,255,.8);line-height:1.6;letter-spacing:.3px}
+.tut-text strong{color:#4a90e8}
+.pu-guide{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pu-guide-item{background:rgba(255,255,255,.05);border-radius:10px;padding:8px 10px;border:1px solid rgba(255,255,255,.08);text-align:left}
+.pu-guide-name{font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;margin-bottom:3px}
+.pu-guide-desc{font-size:11px;color:rgba(255,255,255,.45);line-height:1.4}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(80,200,255,.25);border-radius:2px}
+
+@keyframes shakePiece{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<canvas id="goCanvas"></canvas>
+<canvas id="dragCanvas"></canvas>
+<div id="fxLayer"></div>
+
+<div id="app">
+
+<!-- SPLASH -->
+<div id="splashScreen" class="screen">
+  <div class="logo-wrap">
+    <div class="logo-main" style="background:linear-gradient(135deg,#ffe177,#f5933b,#ff9ec2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 2px 6px rgba(0,0,0,.2))">NEXUS BLAST</div>
+    <div class="logo-sub">Quantum Edition · 2070</div>
+  </div>
+  <div class="splash-demo"><canvas id="splashCanvas"></canvas></div>
+  <p class="splash-tagline">El puzzle más épico del universo cuántico.<br>Relájate. Fluye. Domina el Nexo.</p>
+  <div class="nick-wrap">
+    <div class="nick-label">Tu nombre de combate</div>
+    <input class="nick-inp" id="nickIn" maxlength="14" placeholder="INGRESA TU NOMBRE" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="characters">
+  </div>
+  <div class="splash-btns">
+    <button class="sbtn prim" onclick="startGame()">⚡ ENTRAR AL NEXO</button>
+    <button class="sbtn sec" onclick="showRank()">🏆 HALL OF FAME</button>
+    <button class="sbtn quat" onclick="showMissions()">🎯 MISIONES DIARIAS</button>
+    <button class="sbtn quin" onclick="showAchievements()">🏆 LOGROS</button>
+    <button class="sbtn tert" onclick="showTut()">📖 CÓMO JUGAR</button>
+    <button class="sbtn install" id="installBtn" onclick="installApp()" style="display:none">📲 INSTALAR APP</button>
+  </div>
+  <div class="snd-toggle" onclick="toggleSnd()">
+    <div class="snd-dot on" id="sndDot">♪</div>
+    <span id="sndLbl">Sonido encendido</span>
+  </div>
+  <div class="snd-toggle" onclick="toggleMusic()">
+    <div class="snd-dot on" id="musicDot">🎵</div>
+    <span id="musicLbl">Música encendida</span>
+  </div>
+  <div class="ios-install-hint" id="iosInstallHint" style="display:none">
+    📲 Para instalar: toca <strong>Compartir</strong> → <strong>Agregar a inicio</strong>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="gameScreen" class="screen hidden">
+  <div class="bb-header">
+    <div class="bb-best">
+      <span class="bb-crown">👑</span>
+      <span class="bb-best-val" id="hB">0</span>
+    </div>
+    <div class="bb-score" id="hS">0</div>
+    <button class="bb-extra-toggle" id="extraToggle" onclick="toggleExtras()">⚙</button>
+  </div>
+
+  <div class="bb-extras" id="bbExtras">
+    <div class="hud-row">
+      <div class="hud-card cmb"><div class="hud-lbl">Combo</div><div class="hud-val" id="hC">×1</div></div>
+      <div class="hud-card lvl"><div class="hud-lbl">Nivel</div><div class="hud-val" id="hL">1</div></div>
+    </div>
+    <div class="xp-wrap">
+      <div class="xp-meta"><span id="hN">NEXUS</span><span id="hX">0 / 500 XP</span></div>
+      <div class="xp-bg"><div class="xp-fill" id="hBar" style="width:0%"></div></div>
+    </div>
+    <div class="combo-meter">
+      <span class="combo-meter-lbl">COMBO</span>
+      <div class="combo-pips" id="comboPips"></div>
+    </div>
+    <div class="pu-hint" id="puHint">TOCA UNA CELDA PARA ACTIVAR</div>
+    <div class="pu-wrap">
+      <div class="pu-btn quantum" id="puQ" onclick="actPU('quantum')"><div class="pu-icon">⚡</div><div class="pu-lbl">Quantum</div><div class="pu-cnt" id="cQ">3</div></div>
+      <div class="pu-btn void" id="puV" onclick="actPU('void')"><div class="pu-icon">🌀</div><div class="pu-lbl">Void</div><div class="pu-cnt" id="cV">2</div></div>
+      <div class="pu-btn nova" id="puN" onclick="actPU('nova')"><div class="pu-icon">💥</div><div class="pu-lbl">Nova</div><div class="pu-cnt" id="cN">2</div></div>
+      <div class="pu-btn freeze" id="puF" onclick="actPU('freeze')"><div class="pu-icon">❄️</div><div class="pu-lbl">Freeze</div><div class="pu-cnt" id="cF">1</div></div>
+    </div>
+  </div>
+
+  <div class="grid-wrap">
+    <div class="grid-frame" style="position:relative">
+      <canvas id="gameCanvas" tabindex="0"></canvas>
+    </div>
+  </div>
+  <div class="pieces-wrap">
+    <div class="pieces-row" id="piecesRow">
+      <div class="pslot" id="ps0"><canvas id="pc0" width="88" height="80"></canvas></div>
+      <div class="pslot" id="ps1"><canvas id="pc1" width="88" height="80"></canvas></div>
+      <div class="pslot" id="ps2"><canvas id="pc2" width="88" height="80"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- RANKING -->
+<div id="rankScreen" class="screen hidden">
+  <div class="rank-hdr">
+    <button class="back-btn" onclick="showSplash()">← Volver</button>
+    <div class="rank-titles">
+      <div class="rank-title">HALL OF FAME</div>
+      <div class="rank-sub2">Top jugadores · Nexus Global</div>
+    </div>
+  </div>
+  <div class="rank-tabs">
+    <button class="rank-tab act" id="tAll" onclick="setTab('all')">GLOBAL</button>
+    <button class="rank-tab" id="tMe" onclick="setTab('me')">MIS RÉCORDS</button>
+    <button class="rank-tab" id="tDay" onclick="setTab('today')">HOY</button>
+  </div>
+  <div class="rank-list" id="rankList"></div>
+</div>
+
+<!-- ACHIEVEMENTS -->
+<div id="achScreen" class="screen hidden">
+  <div class="rank-hdr">
+    <button class="back-btn" onclick="showSplash()">← Volver</button>
+    <div class="rank-titles">
+      <div class="rank-title" style="color:#9bffa0">LOGROS</div>
+      <div class="rank-sub2">Tu progreso en el Nexo</div>
+    </div>
+  </div>
+  <div class="ach-progress-wrap">
+    <div class="ach-progress-lbl" id="achProgress">0 / 0 desbloqueados</div>
+    <div class="ach-progress-bg"><div class="ach-progress-fill" id="achProgressBar" style="width:0%"></div></div>
+  </div>
+  <div class="ach-list" id="achList"></div>
+</div>
+
+<!-- DAILY MISSIONS -->
+<div id="missionsScreen" class="screen hidden">
+  <div class="rank-hdr">
+    <button class="back-btn" onclick="showSplash()">← Volver</button>
+    <div class="rank-titles">
+      <div class="rank-title" style="color:#ff9ec2">MISIONES DIARIAS</div>
+      <div class="rank-sub2" id="missionsSub">Se renuevan cada día</div>
+    </div>
+  </div>
+  <div class="missions-list" id="missionsList"></div>
+</div>
+
+</div>
+
+<!-- GAME OVER MODAL -->
+<div class="modal-bg" id="goModal">
+  <div class="modal-card">
+    <div class="modal-title" id="moTit">NEXO COLAPSADO</div>
+    <div class="modal-slbl">Puntuación final</div>
+    <div class="modal-score" id="moSc">0</div>
+    <div class="modal-badge" id="moBadge"></div>
+    <div class="modal-stats">
+      <div class="modal-stat"><div class="modal-stat-lbl">Nivel</div><div class="modal-stat-val" id="moLv">1</div></div>
+      <div class="modal-stat"><div class="modal-stat-lbl">Combo Max</div><div class="modal-stat-val" id="moCm">×1</div></div>
+      <div class="modal-stat"><div class="modal-stat-lbl">Líneas</div><div class="modal-stat-val" id="moLn">0</div></div>
+    </div>
+    <button class="modal-btn prim" onclick="restartGame()">⟳ NUEVO NEXO</button>
+    <button class="modal-btn sec" onclick="rankFromGame()">🏆 VER RANKING</button>
+    <button class="modal-btn ter" onclick="goSplash()">← Menú principal</button>
+  </div>
+</div>
+
+<!-- INTERACTIVE TUTORIAL SCREEN -->
+<div id="tutorialScreen" class="screen hidden">
+  <div class="rank-hdr">
+    <button class="back-btn" onclick="exitTutorial()">← Salir</button>
+    <div class="rank-titles">
+      <div class="rank-title" style="color:#7fb8ff">CÓMO JUGAR</div>
+      <div class="rank-sub2" id="tutStepCounter">Paso 1 / 4</div>
+    </div>
+  </div>
+
+  <div class="tut-card" id="tutCard">
+    <div class="tut-card-icon" id="tutCardIcon">👆</div>
+    <div class="tut-card-text" id="tutCardText">Arrastra el cristal hacia el tablero</div>
+  </div>
+
+  <div class="grid-wrap" style="padding:10px 12px">
+    <div class="grid-frame" style="position:relative">
+      <canvas id="tutCanvas" tabindex="0"></canvas>
+      <div class="tut-arrow" id="tutArrow">⬇</div>
+    </div>
+  </div>
+
+  <div class="pieces-wrap">
+    <div class="pieces-row" id="tutPiecesRow">
+      <div class="pslot" id="tps0"><canvas id="tpc0" width="88" height="80"></canvas></div>
+      <div class="pslot" id="tps1"><canvas id="tpc1" width="88" height="80"></canvas></div>
+      <div class="pslot" id="tps2"><canvas id="tpc2" width="88" height="80"></canvas></div>
+    </div>
+  </div>
+
+  <div class="pu-wrap" id="tutPUWrap" style="opacity:.35;pointer-events:none">
+    <div class="pu-btn quantum" id="tpuQ"><div class="pu-icon">⚡</div><div class="pu-lbl">Quantum</div><div class="pu-cnt">1</div></div>
+    <div class="pu-btn void" id="tpuV"><div class="pu-icon">🌀</div><div class="pu-lbl">Void</div><div class="pu-cnt">1</div></div>
+    <div class="pu-btn nova" id="tpuN"><div class="pu-icon">💥</div><div class="pu-lbl">Nova</div><div class="pu-cnt">1</div></div>
+    <div class="pu-btn freeze" id="tpuF"><div class="pu-icon">❄️</div><div class="pu-lbl">Freeze</div><div class="pu-cnt">1</div></div>
+  </div>
+
+  <div class="tut-footer">
+    <button class="sbtn prim" id="tutNextBtn" onclick="tutSkipStep()" style="max-width:320px">SALTAR PASO →</button>
+    <button class="sbtn install" onclick="exitTutorial()" style="max-width:320px;margin-top:8px">FINALIZAR TUTORIAL</button>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+/* ═════════════════════════════════════
+   BLOCK BLAST STYLE COLOR PALETTE
+   Bright, saturated, solid flat colors
+   exactly matching Block Blast's look
+═════════════════════════════════════ */
+const COLORS = [
+  // Blue (Block Blast classic blue)
+  { a:'#4a90e8', b:'#2f6bc4', hi:'#7fb8ff', shadow:'rgba(74,144,232,.45)', name:'Azul' },
+  // Purple
+  { a:'#a05ce0', b:'#7a3bbf', hi:'#cc99ff', shadow:'rgba(160,92,224,.45)', name:'Púrpura' },
+  // Pink / Magenta
+  { a:'#f5296e', b:'#d41a52', hi:'#ff6fa0', shadow:'rgba(245,41,110,.45)', name:'Rosa' },
+  // Yellow / Gold
+  { a:'#f5c542', b:'#d4a01a', hi:'#ffe177', shadow:'rgba(245,197,66,.45)', name:'Dorado' },
+  // Green
+  { a:'#5cd65c', b:'#3aab3a', hi:'#9bffa0', shadow:'rgba(92,214,92,.45)', name:'Verde' },
+  // Orange
+  { a:'#f5933b', b:'#d4701a', hi:'#ffb877', shadow:'rgba(245,147,59,.45)', name:'Naranja' },
+  // Red
+  { a:'#f5483c', b:'#d4271a', hi:'#ff8979', shadow:'rgba(245,72,60,.45)', name:'Rojo' },
+];
+
+const SHAPES = [
+  [[1]],
+  [[1,1]],[[1],[1]],
+  [[1,1,1]],[[1],[1],[1]],
+  [[1,1],[1,1]],
+  [[1,0],[1,0],[1,1]],[[0,1],[0,1],[1,1]],
+  [[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]],
+  [[1,1,1],[0,1,0]],[[0,1,0],[1,1,1]],
+  [[1,1,1],[1,0,0]],[[1,1,1],[0,0,1]],
+  [[1,0,0],[1,1,1]],[[0,0,1],[1,1,1]],
+  [[1,1],[1,0]],[[1,1],[0,1]],[[1,0],[1,1]],[[0,1],[1,1]],
+  [[1,1,1,1]],[[1],[1],[1],[1]],
+  [[1,1,1],[1,1,1]],[[1,1],[1,1],[1,1]],
+  [[1,1,1,1,1]],[[1],[1],[1],[1],[1]],
+  [[1,1,1],[1,0,1]],
+  [[1,1,0,0],[0,1,1,0],[0,0,1,1]],
+];
+
+const COMBO_MSG=['NEXUS!','QUANTUM!','VOID SURGE!','NOVA BURST!','DIMENSIONAL!','SINGULARITY!','GOD MODE!','OMNIBUS!'];
+const COMBO_COL=['#4a90e8','#a05ce0','#f5296e','#f5c542','#5cd65c','#f5c542','#f5933b','#fff'];
+const AV_GRADS=[['#4a90e8','#2f6bc4'],['#a05ce0','#7a3bbf'],['#f5296e','#d41a52'],['#f5c542','#d4a01a'],['#5cd65c','#3aab3a'],['#f5933b','#d4701a'],['#f5483c','#d4271a']];
+const MAX_PIPS=8;
+
+/* ═════════════════════════════════════
+   STATE
+═════════════════════════════════════ */
+const ROWS=9,COLS=9,CELL=38,GAP=3,PAD=10;
+const GW=COLS*CELL+(COLS-1)*GAP+PAD*2;
+const GH=ROWS*CELL+(ROWS-1)*GAP+PAD*2;
+const DPR=Math.min(window.devicePixelRatio||1,3);
+
+let grid,score,combo,maxCombo,level,xp,pieces,selIdx,activePU,totalLines,gameActive,nick,powerupsUsedThisRun;
+let puCounts={quantum:3,void:2,nova:2,freeze:1};
+let soundOn=true,rankTab='all';
+let best=parseInt(localStorage.getItem('nb4Best')||'0');
+let clearAnimCells=[],ghostCells=[],shineTime=0;
+
+/* ═════════════════════════════════════
+   DRAG STATE
+   Block Blast style: drag from tray,
+   see ghost on board, drop to place
+═════════════════════════════════════ */
+let drag={
+  active:false,
+  pieceIdx:-1,
+  piece:null,
+  // current finger/cursor position (screen coords)
+  cx:0, cy:0,
+  // offset from top-left of piece grid to touch point (in piece cells)
+  offR:0, offC:0,
+  // canvas for floating piece
+  canv:null,
+};
+
+/* ═════════════════════════════════════
+   AUDIO
+═════════════════════════════════════ */
+let AC=null;
+function getAC(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();return AC;}
+function tone(freq,type,dur,vol,delay=0){
+  if(!soundOn)return;
+  try{
+    const ac=getAC(),t=ac.currentTime+delay;
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    o.type=type;o.frequency.setValueAtTime(freq,t);
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.start(t);o.stop(t+dur);
+  }catch(e){}
+}
+function snd_place(){tone(320,'triangle',.05,.13);tone(460,'sine',.08,.09,.05);}
+function snd_clear(n){[[523,659,784],[523,659,784,1047],[784,988,1175,1568],[784,988,1175,1568,1976]][Math.min(n-1,3)].forEach((f,i)=>tone(f,'sine',.2,.13,i*.065));}
+function snd_combo(n){const b=300+n*60;for(let i=0;i<5;i++)tone(b+i*50,'sawtooth',.09,.07,i*.04);}
+function snd_pu(){[600,800,1100,1500].forEach((f,i)=>tone(f,'sine',.12,.12,i*.04));}
+function snd_over(){[360,290,230,170].forEach((f,i)=>tone(f,'sawtooth',.4,.15,i*.15));}
+function snd_tick(){tone(260,'triangle',.03,.06);}
+function snd_levelup(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,'sine',.15,.12,i*.055));}
+function snd_start(){[523,659,784].forEach((f,i)=>setTimeout(()=>tone(f,'triangle',.1,.1),i*80));}
+function snd_grab(){tone(440,'sine',.06,.1);}
+
+/* ═════════════════════════════════════
+   AMBIENT BACKGROUND MUSIC
+   Generative looping pad — calm arpeggio over
+   a slow chord progression, designed to relax.
+   100% synthesized, no audio files needed.
+═════════════════════════════════════ */
+let musicOn=true;
+let musicNodes=[];
+let musicTimer=null;
+let musicMasterGain=null;
+
+const MUSIC_CHORDS=[
+  [261.63,329.63,392.00,493.88], // Cmaj7
+  [220.00,277.18,329.63,440.00], // Am7
+  [196.00,246.94,293.66,392.00], // Gmaj7-ish
+  [174.61,220.00,261.63,349.23], // Fmaj7
+];
+let musicChordIdx=0;
+let musicStepIdx=0;
+
+function startMusic(){
+  if(!musicOn) return;
+  if(AC===null) getAC();
+  const ac=getAC();
+  if(ac.state==='suspended') ac.resume();
+  if(musicTimer) return; // already running
+
+  musicMasterGain=ac.createGain();
+  musicMasterGain.gain.value=0;
+  musicMasterGain.connect(ac.destination);
+  // fade in
+  musicMasterGain.gain.linearRampToValueAtTime(0.05, ac.currentTime+1.5);
+
+  const stepDur=0.9; // seconds per arpeggio note
+  function playStep(){
+    if(!musicOn || !musicMasterGain) return;
+    const chord=MUSIC_CHORDS[musicChordIdx];
+    const note=chord[musicStepIdx % chord.length];
+    const ac2=getAC();
+    const o=ac2.createOscillator(), g=ac2.createGain(), f=ac2.createBiquadFilter();
+    f.type='lowpass'; f.frequency.value=1400;
+    o.type='sine'; o.frequency.value=note;
+    o.connect(f); f.connect(g); g.connect(musicMasterGain);
+    const t=ac2.currentTime;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.7,t+0.15);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+stepDur*1.8);
+    o.start(t); o.stop(t+stepDur*2);
+
+    // soft sub pad on chord change
+    if(musicStepIdx===0){
+      const o2=ac2.createOscillator(), g2=ac2.createGain();
+      o2.type='triangle'; o2.frequency.value=chord[0]/2;
+      o2.connect(g2); g2.connect(musicMasterGain);
+      g2.gain.setValueAtTime(0,t);
+      g2.gain.linearRampToValueAtTime(0.35,t+0.5);
+      g2.gain.exponentialRampToValueAtTime(0.0001,t+stepDur*4);
+      o2.start(t); o2.stop(t+stepDur*4);
+    }
+
+    musicStepIdx++;
+    if(musicStepIdx>=4){ musicStepIdx=0; musicChordIdx=(musicChordIdx+1)%MUSIC_CHORDS.length; }
+  }
+  playStep();
+  musicTimer=setInterval(playStep, stepDur*1000);
+}
+
+function stopMusic(){
+  if(musicTimer){ clearInterval(musicTimer); musicTimer=null; }
+  if(musicMasterGain){
+    try{
+      const ac=getAC();
+      musicMasterGain.gain.linearRampToValueAtTime(0, ac.currentTime+0.6);
+      setTimeout(()=>{ musicMasterGain=null; },700);
+    }catch(e){ musicMasterGain=null; }
+  }
+}
+
+function toggleMusic(){
+  musicOn=!musicOn;
+  const dot=document.getElementById('musicDot');
+  const lbl=document.getElementById('musicLbl');
+  if(dot) dot.className='snd-dot'+(musicOn?' on':'');
+  if(lbl) lbl.textContent=musicOn?'Música encendida':'Música silenciada';
+  if(musicOn) startMusic(); else stopMusic();
+}
+
+/* ═════════════════════════════════════
+   BACKGROUND
+═════════════════════════════════════ */
+const bgC=document.getElementById('bgCanvas'),bgX=bgC.getContext('2d');
+let bgParts=[],bgT=0;
+function initBG(){
+  bgC.width=window.innerWidth;bgC.height=window.innerHeight;bgParts=[];
+  for(let i=0;i<70;i++){bgParts.push({x:Math.random()*bgC.width,y:Math.random()*bgC.height,vx:(Math.random()-.5)*.4,vy:-(Math.random()*.6+.15),r:Math.random()*1.8+.3,op:Math.random()*.6+.1,col:COLORS[Math.floor(Math.random()*COLORS.length)].a,ph:Math.random()*Math.PI*2});}
+}
+function animBG(){
+  // Redraw the Block Blast sky gradient each frame (instead of compositing
+  // a translucent dark layer, which would slowly darken to black)
+  const grad=bgX.createLinearGradient(0,0,bgC.width*0.3,bgC.height);
+  grad.addColorStop(0,'#6f8fe0'); grad.addColorStop(0.45,'#5b7fd4'); grad.addColorStop(1,'#4a6bc4');
+  bgX.fillStyle=grad; bgX.fillRect(0,0,bgC.width,bgC.height);
+  bgT+=.007;
+  bgX.save();bgX.globalAlpha=.05;bgX.strokeStyle='#ffffff';bgX.lineWidth=.5;
+  for(let x=0;x<bgC.width;x+=55){bgX.beginPath();bgX.moveTo(x,0);bgX.lineTo(x,bgC.height);bgX.stroke()}
+  for(let y=0;y<bgC.height;y+=55){bgX.beginPath();bgX.moveTo(0,y);bgX.lineTo(bgC.width,y);bgX.stroke()}
+  bgX.restore();
+  for(const p of bgParts){
+    const a=p.op*(0.5+0.5*Math.sin(bgT+p.ph));
+    bgX.save();bgX.globalAlpha=a;bgX.fillStyle=p.col;bgX.shadowColor=p.col;bgX.shadowBlur=3;
+    bgX.beginPath();bgX.arc(p.x,p.y,p.r,0,Math.PI*2);bgX.fill();bgX.restore();
+    p.x+=p.vx;p.y+=p.vy;p.ph+=.018;
+    if(p.y<-10){p.y=bgC.height+5;p.x=Math.random()*bgC.width}
+    if(p.x<-5)p.x=bgC.width+5;if(p.x>bgC.width+5)p.x=-5;
+  }
+  requestAnimationFrame(animBG);
+}
+initBG();window.addEventListener('resize',initBG);animBG();
+
+/* ═════════════════════════════════════
+   SPLASH CANVAS
+═════════════════════════════════════ */
+const sc=document.getElementById('splashCanvas'),sX=sc.getContext('2d');
+let splT=0;
+function initSplash(){
+  const d=Math.min(DPR,2);sc.width=sc.offsetWidth*d;sc.height=sc.offsetHeight*d;sX.scale(d,d);animSplash();
+}
+function animSplash(){
+  if(document.getElementById('splashScreen').classList.contains('hidden')){requestAnimationFrame(animSplash);return;}
+  splT+=.04;
+  const w=sc.offsetWidth,h=sc.offsetHeight;
+  sX.clearRect(0,0,w,h);sX.fillStyle='#0e0e28';rr(sX,0,0,w,h,18);sX.fill();
+  const cols=9,rows=5,gp=2,cs=Math.floor(Math.min((w-16)/cols,(h-12)/rows));
+  const ox=(w-cols*cs-(cols-1)*gp)/2,oy=(h-rows*cs-(rows-1)*gp)/2;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const wave=Math.sin(splT*.75+c*.55+r*.45)*.5+.5;
+      const ci=Math.floor((c*.8+r*.9+splT*.4))%COLORS.length;
+      const col=COLORS[(ci+COLORS.length)%COLORS.length];
+      sX.save();sX.globalAlpha=.3+wave*.65;
+      const x=ox+c*(cs+gp),y=oy+r*(cs+gp);
+      drawBlockOn(sX,x,y,cs,(ci+COLORS.length)%COLORS.length);
+      sX.restore();
+    }
+  }
+  requestAnimationFrame(animSplash);
+}
+setTimeout(initSplash,80);
+
+/* ═════════════════════════════════════
+   GAME CANVAS
+═════════════════════════════════════ */
+const gc=document.getElementById('gameCanvas'),gX=gc.getContext('2d');
+function setupGC(){gc.width=GW*DPR;gc.height=GH*DPR;gc.style.width=GW+'px';gc.style.height=GH+'px';gX.scale(DPR,DPR);}
+setupGC();
+
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+function cx(c){return PAD+c*(CELL+GAP);}
+function cy(r){return PAD+r*(CELL+GAP);}
+
+/* ═════════════════════════════════════
+   DRAW BLOCK — Block Blast flat bright style
+   Solid fill + strong top shine strip
+   + subtle edge shadow
+═════════════════════════════════════ */
+function drawBlockOn(ctx,x,y,size,ci,alpha=1,scl=1){
+  const col=COLORS[ci]||COLORS[0];
+  const s=size*scl,off=size*(1-scl)/2;
+  const bevel=Math.max(3,s*.16);
+  ctx.save();ctx.globalAlpha=alpha;
+  const X=x+off,Y=y+off;
+
+  /* base dark shadow under block for depth */
+  ctx.fillStyle='rgba(0,0,0,.15)';
+  rr(ctx,X+1,Y+s*.06,s,s,Math.max(2,5*scl));ctx.fill();
+
+  /* main cube face (front) - solid bright color */
+  rr(ctx,X,Y,s,s,Math.max(2,5*scl));
+  ctx.fillStyle=col.a;ctx.fill();
+
+  /* right edge - darker shade for 3D cube effect */
+  ctx.save();
+  rr(ctx,X,Y,s,s,Math.max(2,5*scl));ctx.clip();
+  ctx.fillStyle=col.b;
+  ctx.beginPath();
+  ctx.moveTo(X+s-bevel,Y);
+  ctx.lineTo(X+s,Y+bevel);
+  ctx.lineTo(X+s,Y+s);
+  ctx.lineTo(X+s-bevel,Y+s-bevel);
+  ctx.closePath();ctx.fill();
+
+  /* bottom edge - darker shade */
+  ctx.beginPath();
+  ctx.moveTo(X,Y+s-bevel);
+  ctx.lineTo(X+bevel,Y+s);
+  ctx.lineTo(X+s,Y+s);
+  ctx.lineTo(X+s-bevel,Y+s-bevel);
+  ctx.closePath();ctx.fill();
+  ctx.restore();
+
+  /* top highlight - bright glossy strip (signature Block Blast look) */
+  const topGrad=ctx.createLinearGradient(X,Y,X,Y+s*.5);
+  topGrad.addColorStop(0,'rgba(255,255,255,.5)');
+  topGrad.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.save();
+  rr(ctx,X,Y,s,s,Math.max(2,5*scl));ctx.clip();
+  ctx.fillStyle=topGrad;
+  ctx.fillRect(X,Y,s-bevel,s*.45);
+  ctx.restore();
+
+  /* outer border */
+  ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=1*scl;
+  rr(ctx,X+.5,Y+.5,s-1,s-1,Math.max(2,5*scl));ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawBlock(ctx,x,y,ci,alpha=1,scl=1){
+  drawBlockOn(ctx,x,y,CELL,ci,alpha,scl);
+}
+
+/* ═════════════════════════════════════
+   DRAW GRID
+═════════════════════════════════════ */
+function drawGrid(){
+  gX.clearRect(0,0,GW,GH);
+  /* board */
+  rr(gX,0,0,GW,GH,14);gX.fillStyle='#2b3563';gX.fill();
+  if(!grid) return;
+  shineTime+=.005;
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const x=cx(c),y=cy(r),v=grid[r][c];
+      const isGhost=ghostCells.some(g=>g[0]===r&&g[1]===c);
+      const clr=clearAnimCells.find(a=>a.r===r&&a.c===c);
+      if(clr){
+        /* clearing animation: scale up and fade */
+        const t=clr.t;
+        drawBlock(gX,x,y,clr.col,1-t,1+t*.65);
+        gX.save();gX.globalAlpha=(1-t)*.55;
+        gX.strokeStyle=COLORS[clr.col].a;gX.lineWidth=2*(1-t);
+        gX.beginPath();gX.arc(x+CELL/2,y+CELL/2,CELL*.5*(.5+t*1.2),0,Math.PI*2);gX.stroke();
+        gX.restore();
+      } else if(v!==null){
+        drawBlock(gX,x,y,v);
+      } else if(isGhost){
+        /* ghost: dim version of piece color */
+        const ci=drag.active?drag.piece?.ci:(pieces[selIdx]?.ci??0);
+        drawBlock(gX,x,y,ci,.32);
+        gX.save();gX.globalAlpha=.5;
+        gX.strokeStyle=COLORS[ci].a;gX.lineWidth=1.8;
+        rr(gX,x+1,y+1,CELL-2,CELL-2,4);gX.stroke();gX.restore();
+      } else {
+        /* empty cell - Block Blast dark navy with subtle border */
+        rr(gX,x,y,CELL,CELL,4);gX.fillStyle='#222b54';gX.fill();
+        gX.strokeStyle='rgba(255,255,255,.04)';gX.lineWidth=1;gX.stroke();
+      }
+    }
+  }
+}
+
+/* ═════════════════════════════════════
+   DRAW PIECE PREVIEWS (tray)
+═════════════════════════════════════ */
+function drawPC(idx){
+  const canv=document.getElementById('pc'+idx),ctx=canv.getContext('2d');
+  const d=Math.min(DPR,2),W=88,H=80;
+  canv.width=W*d;canv.height=H*d;canv.style.width=W+'px';canv.style.height=H+'px';
+  ctx.scale(d,d);ctx.clearRect(0,0,W,H);
+  const piece=pieces[idx];if(!piece)return;
+  const sh=piece.shape,rows=sh.length,cols=sh[0].length;
+  const cs=Math.min(17,Math.floor(Math.min((W-12)/cols,(H-12)/rows)));
+  const gp=2,tw=cols*cs+(cols-1)*gp,th=rows*cs+(rows-1)*gp;
+  const ox=(W-tw)/2,oy=(H-th)/2;
+  sh.forEach((row,r)=>row.forEach((v,c)=>{
+    if(!v)return;
+    drawBlockOn(ctx,ox+c*(cs+gp),oy+r*(cs+gp),cs,piece.ci);
+  }));
+}
+
+function renderPieces(){
+  if(!pieces) return;
+  for(let i=0;i<3;i++){
+    document.getElementById('ps'+i).classList.toggle('sel',selIdx===i&&!drag.active);
+    document.getElementById('ps'+i).classList.toggle('empty',!pieces[i]);
+    document.getElementById('ps'+i).classList.toggle('dragging',drag.active&&drag.pieceIdx===i);
+    drawPC(i);
+  }
+}
+
+/* ═════════════════════════════════════
+   DRAG-AND-DROP ENGINE
+   Block Blast style: pick up piece from
+   tray, drag freely, ghost follows finger,
+   drop on board or cancel back to tray
+═════════════════════════════════════ */
+const dragCanv=document.getElementById('dragCanvas');
+const dragX=dragCanv.getContext('2d');
+
+function startDrag(pieceIdx,startX,startY){
+  if(!pieces[pieceIdx]||!gameActive)return;
+  if(AC===null)getAC().resume();
+  snd_grab();
+  drag.active=true;drag.pieceIdx=pieceIdx;drag.piece={...pieces[pieceIdx]};
+  drag.cx=startX;drag.cy=startY;
+  selIdx=null;
+  /* Build drag canvas sized to piece */
+  const sh=drag.piece.shape;
+  const rows=sh.length,cols=sh[0].length;
+  /* use large cells for drag so finger doesn't cover it */
+  const CS=CELL+6,GP=3;
+  const dw=cols*CS+(cols-1)*GP,dh=rows*CS+(rows-1)*GP;
+  dragCanv.width=dw*DPR;dragCanv.height=dh*DPR;
+  dragCanv.style.width=dw+'px';dragCanv.style.height=dh+'px';
+  dragX.scale(DPR,DPR);
+  dragX.clearRect(0,0,dw,dh);
+  sh.forEach((row,r)=>row.forEach((v,c)=>{
+    if(!v)return;
+    dragX.save();dragX.globalAlpha=.92;
+    drawBlockOn(dragX,c*(CS+GP),r*(CS+GP),CS,drag.piece.ci);
+    dragX.restore();
+  }));
+  /* position above finger */
+  positionDrag(startX,startY);
+  dragCanv.style.display='block';
+  updateGhostFromDrag(startX,startY);
+  renderPieces();drawGrid();
+}
+
+function positionDrag(screenX,screenY){
+  const sh=drag.piece.shape,rows=sh.length,cols=sh[0].length;
+  const CS=CELL+6,GP=3;
+  const dw=cols*CS+(cols-1)*GP,dh=rows*CS+(rows-1)*GP;
+  /* center piece horizontally on finger, raise it above finger */
+  dragCanv.style.left=(screenX-dw/2)+'px';
+  dragCanv.style.top=(screenY-dh-30)+'px';
+}
+
+function updateGhostFromDrag(screenX,screenY){
+  /* map screen position to board cell */
+  const rect=gc.getBoundingClientRect();
+  const scaleX=GW/rect.width,scaleY=GH/rect.height;
+  const sh=drag.piece.shape,rows=sh.length,cols=sh[0].length;
+  /* center of piece should be at finger */
+  const CS=CELL+6,GP=3;
+  const dw=cols*CS+(cols-1)*GP,dh=rows*CS+(rows-1)*GP;
+  /* finger maps to center of piece on board */
+  const boardX=(screenX-rect.left)*scaleX;
+  const boardY=(screenY-dh/2-30+dh/2-rect.top)*scaleY; // keep piece centered
+  /* simpler: map finger tip to board */
+  const bx=(screenX-rect.left)*scaleX;
+  const by=(screenY-rect.top)*scaleY;
+  /* figure out which cell the center of piece would land on */
+  const anchorR=Math.round((by-PAD)/(CELL+GAP)-rows/2+.5);
+  const anchorC=Math.round((bx-PAD)/(CELL+GAP)-cols/2+.5);
+  ghostCells=[];
+  if(canPlace(sh,anchorR,anchorC)){
+    sh.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)ghostCells.push([anchorR+dr,anchorC+dc]);}));
+    drag.dropR=anchorR;drag.dropC=anchorC;drag.canDrop=true;
+  } else {
+    /* try nearby cells */
+    drag.canDrop=false;drag.dropR=anchorR;drag.dropC=anchorC;
+    // highlight invalid ghost as red tint?
+  }
+}
+
+function endDrag(screenX,screenY){
+  if(!drag.active)return;
+  const rect=gc.getBoundingClientRect();
+  /* check if released over board */
+  const overBoard=(screenX>=rect.left&&screenX<=rect.right&&screenY>=rect.top&&screenY<=rect.bottom);
+  if(overBoard&&drag.canDrop&&canPlace(drag.piece.shape,drag.dropR,drag.dropC)){
+    doPlace(drag.piece,drag.dropR,drag.dropC,drag.pieceIdx);
+  } else {
+    /* cancel — snap back */
+    snd_tick();
+  }
+  drag.active=false;drag.canDrop=false;ghostCells=[];
+  dragCanv.style.display='none';
+  dragX.setTransform(1,0,0,1,0,0);
+  renderPieces();drawGrid();
+}
+
+function cancelDrag(){
+  drag.active=false;drag.canDrop=false;ghostCells=[];
+  dragCanv.style.display='none';
+  dragX.setTransform(1,0,0,1,0,0);
+  renderPieces();drawGrid();
+}
+
+/* ═════════════════════════════════════
+   PIECE TRAY TOUCH/MOUSE EVENTS
+═════════════════════════════════════ */
+function setupPieceEvents(){
+  for(let i=0;i<3;i++){
+    const slot=document.getElementById('ps'+i);
+    /* Touch start on tray piece */
+    slot.addEventListener('touchstart',e=>{
+      e.preventDefault();e.stopPropagation();
+      if(!pieces[i]||!gameActive)return;
+      const t=e.touches[0];
+      startDrag(i,t.clientX,t.clientY);
+    },{passive:false});
+    /* Mouse down on tray piece */
+    slot.addEventListener('mousedown',e=>{
+      e.preventDefault();
+      if(!pieces[i]||!gameActive)return;
+      startDrag(i,e.clientX,e.clientY);
+    });
+    /* Also allow tap/click to select (for desktop users) */
+    slot.addEventListener('click',e=>{
+      if(drag.active)return;
+      if(!pieces[i]||!gameActive)return;
+      selIdx=selIdx===i?null:i;
+      ghostCells=[];renderPieces();drawGrid();
+      if(selIdx!==null)snd_tick();
+    });
+  }
+}
+
+/* Global move/end for drag */
+document.addEventListener('touchmove',e=>{
+  if(!drag.active)return;
+  e.preventDefault();
+  const t=e.touches[0];
+  drag.cx=t.clientX;drag.cy=t.clientY;
+  positionDrag(t.clientX,t.clientY);
+  updateGhostFromDrag(t.clientX,t.clientY);
+  drawGrid();
+},{passive:false});
+
+document.addEventListener('touchend',e=>{
+  if(!drag.active)return;
+  e.preventDefault();
+  const t=e.changedTouches[0];
+  endDrag(t.clientX,t.clientY);
+},{passive:false});
+
+document.addEventListener('touchcancel',e=>{
+  if(drag.active)cancelDrag();
+},{passive:false});
+
+document.addEventListener('mousemove',e=>{
+  if(!drag.active)return;
+  drag.cx=e.clientX;drag.cy=e.clientY;
+  positionDrag(e.clientX,e.clientY);
+  updateGhostFromDrag(e.clientX,e.clientY);
+  drawGrid();
+});
+
+document.addEventListener('mouseup',e=>{
+  if(!drag.active)return;
+  endDrag(e.clientX,e.clientY);
+});
+
+/* ═════════════════════════════════════
+   BOARD CLICK (for desktop/click-based play)
+═════════════════════════════════════ */
+gc.addEventListener('click',e=>{
+  if(!gameActive||drag.active)return;
+  if(activePU){
+    const rect=gc.getBoundingClientRect();
+    const px=(e.clientX-rect.left)/rect.width*GW;
+    const py=(e.clientY-rect.top)/rect.height*GH;
+    const r=Math.floor((py-PAD)/(CELL+GAP)),c=Math.floor((px-PAD)/(CELL+GAP));
+    if(r>=0&&r<ROWS&&c>=0&&c<COLS)applyPU(activePU,r,c);
+    return;
+  }
+  if(selIdx===null)return;
+  const rect=gc.getBoundingClientRect();
+  const px=(e.clientX-rect.left)/rect.width*GW;
+  const py=(e.clientY-rect.top)/rect.height*GH;
+  const r=Math.floor((py-PAD)/(CELL+GAP)),c=Math.floor((px-PAD)/(CELL+GAP));
+  if(r<0||r>=ROWS||c<0||c>=COLS)return;
+  const piece=pieces[selIdx];if(!piece)return;
+  if(!canPlace(piece.shape,r,c)){snd_tick();return;}
+  doPlace(piece,r,c,selIdx);
+});
+
+gc.addEventListener('mousemove',e=>{
+  if(!gameActive||drag.active)return;
+  if(selIdx===null&&!activePU){ghostCells=[];drawGrid();return;}
+  const rect=gc.getBoundingClientRect();
+  const px=(e.clientX-rect.left)/rect.width*GW;
+  const py=(e.clientY-rect.top)/rect.height*GH;
+  const r=Math.floor((py-PAD)/(CELL+GAP)),c=Math.floor((px-PAD)/(CELL+GAP));
+  if(r>=0&&r<ROWS&&c>=0&&c<COLS){
+    ghostCells=[];
+    if(selIdx!==null){const sh=pieces[selIdx]?.shape;if(sh&&canPlace(sh,r,c))sh.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)ghostCells.push([r+dr,c+dc]);}));}
+  } else ghostCells=[];
+  drawGrid();
+});
+gc.addEventListener('mouseleave',()=>{if(!drag.active){ghostCells=[];drawGrid();}});
+
+/* Board touch for PU apply */
+gc.addEventListener('touchstart',e=>{
+  if(!gameActive||drag.active)return;
+  if(!activePU)return;
+  e.preventDefault();
+  const rect=gc.getBoundingClientRect();
+  const t=e.touches[0];
+  const px=(t.clientX-rect.left)/rect.width*GW;
+  const py=(t.clientY-rect.top)/rect.height*GH;
+  const r=Math.floor((py-PAD)/(CELL+GAP)),c=Math.floor((px-PAD)/(CELL+GAP));
+  if(r>=0&&r<ROWS&&c>=0&&c<COLS)applyPU(activePU,r,c);
+},{passive:false});
+
+/* ═════════════════════════════════════
+   GAME LOGIC
+═════════════════════════════════════ */
+function canPlace(sh,sr,sc){
+  for(let r=0;r<sh.length;r++)for(let c=0;c<sh[r].length;c++)
+    if(sh[r][c]&&(sr+r>=ROWS||sc+c>=COLS||sr+r<0||sc+c<0||grid[sr+r][sc+c]!==null))return false;
+  return true;
+}
+
+function doPlace(piece,sr,sc,idx){
+  piece.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v)grid[sr+r][sc+c]=piece.ci;}));
+  pieces[idx]=null;selIdx=null;ghostCells=[];
+  const bs=piece.shape.flat().filter(Boolean).length;
+  addScore(bs*12*level,'rgba(255,255,255,.7)',sr,sc);
+  snd_place();
+  burstFX(cx(sc)+CELL/2,cy(sr)+CELL/2,piece.ci);
+  renderPieces();drawGrid();
+  setTimeout(doClear,80);
+}
+
+function doClear(){
+  const fullR=[],fullC=[];
+  for(let r=0;r<ROWS;r++)if(grid[r].every(v=>v!==null))fullR.push(r);
+  for(let c=0;c<COLS;c++){let f=true;for(let r=0;r<ROWS;r++)if(grid[r][c]===null){f=false;break}if(f)fullC.push(c);}
+  if(!fullR.length&&!fullC.length){combo=1;updatePips();refill();return;}
+  const cellMap=new Map();
+  fullR.forEach(r=>{for(let c=0;c<COLS;c++)cellMap.set(r+','+c,{r,c,col:grid[r][c]});});
+  fullC.forEach(c=>{for(let r=0;r<ROWS;r++)if(!cellMap.has(r+','+c))cellMap.set(r+','+c,{r,c,col:grid[r][c]});});
+  const n=fullR.length+fullC.length;totalLines+=n;
+  combo++;maxCombo=Math.max(maxCombo,combo);
+  document.getElementById('hC').textContent='×'+combo;updatePips();
+  const cc=document.querySelector('.hud-card.cmb');cc.classList.remove('bump');requestAnimationFrame(()=>cc.classList.add('bump'));
+  snd_clear(n);if(combo>2)snd_combo(combo);
+  showComboTxt(n,combo);
+  clearAnimCells=[];cellMap.forEach(({r,c,col})=>clearAnimCells.push({r,c,col,t:0}));
+  const t0=performance.now();
+  function step(ts){
+    const dt=(ts-t0)/420;clearAnimCells.forEach(a=>a.t=Math.min(1,dt));drawGrid();
+    if(dt<1){requestAnimationFrame(step);return;}
+    cellMap.forEach(({r,c})=>grid[r][c]=null);clearAnimCells=[];
+    const pts=n*100*combo*level;addScore(pts,combo>3?'#ffe177':combo>1?'#f5296e':'#4a90e8',4,4);
+    updateXP(pts);cellMap.forEach(({r,c,col})=>burstFX(cx(c)+CELL/2,cy(r)+CELL/2,col,4));
+    drawGrid();refill();
+  }
+  requestAnimationFrame(step);
+}
+
+function refill(){
+  if(pieces.every(p=>p===null)){
+    setTimeout(()=>{pieces=genPieceSet();combo=Math.max(1,combo-1);document.getElementById('hC').textContent='×'+combo;updatePips();renderPieces();checkOver();},200);
+  } else checkOver();
+}
+
+function checkOver(){
+  const rem=pieces.filter(Boolean);if(!rem.length)return;
+  const ok=rem.some(p=>{for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(canPlace(p.shape,r,c))return true;return false;});
+  if(!ok)setTimeout(()=>{snd_over();showOver();},350);
+}
+
+/* ═════════════════════════════════════
+   POWER-UPS
+═════════════════════════════════════ */
+const PU_BTNS={quantum:'puQ',void:'puV',nova:'puN',freeze:'puF'};
+const PU_CNT={quantum:'cQ',void:'cV',nova:'cN',freeze:'cF'};
+
+function actPU(type){
+  if(!gameActive||puCounts[type]<=0)return;
+  if(AC===null)getAC().resume();
+  if(activePU===type){
+    activePU=null;Object.values(PU_BTNS).forEach(id=>document.getElementById(id).classList.remove('active'));
+    document.getElementById('puHint').classList.remove('show');return;
+  }
+  activePU=type;
+  Object.entries(PU_BTNS).forEach(([k,id])=>document.getElementById(id).classList.toggle('active',k===type));
+  const h=document.getElementById('puHint');
+  h.textContent={quantum:'⚡ TOCA UN BLOQUE',void:'🌀 TOCA EL CENTRO',nova:'💥 TOCA PARA CRUZ',freeze:'❄️'}[type];
+  h.classList.add('show');
+  if(type==='freeze'){
+    puCounts.freeze--;document.getElementById('cF').textContent=puCounts.freeze;
+    powerupsUsedThisRun++;
+    combo=Math.min(combo+3,10);maxCombo=Math.max(maxCombo,combo);
+    document.getElementById('hC').textContent='×'+combo;updatePips();
+    activePU=null;document.getElementById('puF').classList.remove('active');h.classList.remove('show');
+    snd_pu();showComboTxt(3,combo);notify('❄️ COMBO ×'+combo+' ACTIVADO!');
+  }
+}
+
+function applyPU(type,r,c){
+  if(puCounts[type]<=0)return;
+  puCounts[type]--;document.getElementById(PU_CNT[type]).textContent=puCounts[type];
+  powerupsUsedThisRun++;
+  activePU=null;Object.values(PU_BTNS).forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('puHint').classList.remove('show');snd_pu();
+  const cells=[];
+  if(type==='quantum'){const col=grid[r][c];if(col===null){notify('SIN BLOQUE AHÍ');return;}for(let i=0;i<ROWS;i++)for(let j=0;j<COLS;j++)if(grid[i][j]===col)cells.push({r:i,c:j,col});notify('⚡ '+COLORS[col].name.toUpperCase()+' DESTRUIDO');}
+  else if(type==='void'){for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<ROWS&&nc>=0&&nc<COLS&&grid[nr][nc]!==null)cells.push({r:nr,c:nc,col:grid[nr][nc]});}notify('🌀 ZONA 3×3 ANIQUILADA');}
+  else if(type==='nova'){for(let i=0;i<COLS;i++)if(grid[r][i]!==null)cells.push({r,c:i,col:grid[r][i]});for(let i=0;i<ROWS;i++)if(i!==r&&grid[i][c]!==null)cells.push({r:i,c,col:grid[i][c]});notify('💥 CRUCIFIJO DIMENSIONAL');}
+  if(!cells.length){notify('SIN BLANCOS EN EL ÁREA');return;}
+  clearAnimCells=cells.map(o=>({...o,t:0}));
+  const t0=performance.now();
+  function step(ts){
+    const dt=(ts-t0)/380;clearAnimCells.forEach(a=>a.t=Math.min(1,dt));drawGrid();
+    if(dt<1){requestAnimationFrame(step);return;}
+    cells.forEach(({r,c})=>grid[r][c]=null);clearAnimCells=[];
+    addScore(cells.length*75*level,'#ffe177',r,c);
+    cells.forEach(({r,c,col})=>burstFX(cx(c)+CELL/2,cy(r)+CELL/2,col,5));
+    drawGrid();doClear();
+  }
+  requestAnimationFrame(step);
+}
+
+/* ═════════════════════════════════════
+   SCORE / XP
+═════════════════════════════════════ */
+function addScore(pts,col,gr,gc_){
+  score+=pts;if(score>best){best=score;localStorage.setItem('nb4Best',best);document.getElementById('hB').textContent=fmt(best);}
+  document.getElementById('hS').textContent=fmt(score);
+  const card=document.querySelector('.bb-score');card.classList.remove('bump');requestAnimationFrame(()=>card.classList.add('bump'));
+  if(pts>0)scorePop('+'+fmt(pts),col,gr,gc_);
+}
+function updateXP(pts){
+  xp+=Math.floor(pts/5);const need=level*500;
+  if(xp>=need){xp-=need;level++;document.getElementById('hL').textContent=level;snd_levelup();notify('🆙 NIVEL '+level+' — NEXO EXPANDIDO');}
+  document.getElementById('hX').textContent=fmt(xp)+' / '+fmt(level*500)+' XP';
+  document.getElementById('hBar').style.width=Math.min(100,xp/(level*500)*100)+'%';
+}
+function fmt(n){return Math.round(n).toLocaleString('es');}
+function updatePips(){
+  const c=document.getElementById('comboPips');c.innerHTML='';
+  for(let i=0;i<MAX_PIPS;i++){const p=document.createElement('div');p.className='combo-pip'+(i<combo-1?(combo>5?' super':' active'):'');c.appendChild(p);}
+}
+
+/* ═════════════════════════════════════
+   VISUAL FX
+═════════════════════════════════════ */
+function scorePop(txt,col,gr,gc_){
+  const fx=document.getElementById('fxLayer'),el=document.createElement('div');el.className='score-pop';
+  const rect=gc.getBoundingClientRect();
+  const px=rect.left+(gc_!==undefined?cx(gc_)/GW*rect.width:rect.width*.5);
+  const py=rect.top+(gr!==undefined?cy(gr)/GH*rect.height:rect.height*.4);
+  el.style.left=(px-30)+'px';el.style.top=(py-18)+'px';el.style.color=col||'#fff';el.textContent=txt;
+  fx.appendChild(el);setTimeout(()=>el.remove(),950);
+}
+function showComboTxt(lines,cmb,refCanvas){
+  const fx=document.getElementById('fxLayer'),el=document.createElement('div');el.className='combo-txt';
+  const idx=Math.min(Math.max(0,lines-1+(cmb>4?1:0)),COMBO_MSG.length-1);
+  el.textContent=COMBO_MSG[idx];el.style.color=COMBO_COL[idx];
+  const rect=(refCanvas||gc).getBoundingClientRect();el.style.top=(rect.top+rect.height*.3)+'px';
+  fx.appendChild(el);setTimeout(()=>el.remove(),1050);
+}
+function burstFX(x,y,ci,count=6){
+  const rect=gc.getBoundingClientRect();
+  const px=rect.left+x/GW*rect.width,py=rect.top+y/GH*rect.height;
+  const col=COLORS[ci]?.a||'#fff',fx=document.getElementById('fxLayer');
+  for(let i=0;i<count;i++){
+    const p=document.createElement('div');p.className='particle-burst';
+    const angle=Math.random()*Math.PI*2,dist=20+Math.random()*44;
+    p.style.cssText=`left:${px-4}px;top:${py-4}px;background:${col};box-shadow:0 0 5px ${col};--tx:${(Math.cos(angle)*dist).toFixed(1)}px;--ty:${(Math.sin(angle)*dist).toFixed(1)}px;animation-delay:${(Math.random()*.08).toFixed(2)}s`;
+    fx.appendChild(p);setTimeout(()=>p.remove(),850);
+  }
+}
+
+/* ═════════════════════════════════════
+   GAME OVER CONFETTI
+═════════════════════════════════════ */
+const goC=document.getElementById('goCanvas'),goX_=goC.getContext('2d');
+let goParts=[],goAnim=false;
+function celebrate(){
+  goC.width=window.innerWidth;goC.height=window.innerHeight;goParts=[];
+  for(let i=0;i<140;i++){
+    const col=COLORS[Math.floor(Math.random()*COLORS.length)].a;
+    goParts.push({x:Math.random()*goC.width,y:goC.height+20,vx:(Math.random()-.5)*9,vy:-(Math.random()*13+5),grav:.28,rot:Math.random()*360,vrot:(Math.random()-.5)*9,col,w:Math.random()*9+4,h:Math.random()*5+3,life:1});
+  }
+  goAnim=true;stepGO();
+}
+function stepGO(){
+  if(!goAnim)return;goX_.clearRect(0,0,goC.width,goC.height);
+  goParts=goParts.filter(p=>p.life>.01);
+  for(const p of goParts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.grav;p.rot+=p.vrot;p.life-=.011;goX_.save();goX_.globalAlpha=Math.max(0,p.life);goX_.translate(p.x,p.y);goX_.rotate(p.rot*Math.PI/180);goX_.fillStyle=p.col;goX_.fillRect(-p.w/2,-p.h/2,p.w,p.h);goX_.restore();}
+  if(goParts.length)requestAnimationFrame(stepGO);else{goAnim=false;goX_.clearRect(0,0,goC.width,goC.height);}
+}
+
+/* ═════════════════════════════════════
+   NOTIFY
+═════════════════════════════════════ */
+let notifT=null;
+function notify(msg){const el=document.getElementById('notif');el.textContent=msg;el.classList.add('show');clearTimeout(notifT);notifT=setTimeout(()=>el.classList.remove('show'),2300);}
+
+/* ═════════════════════════════════════
+   RANKING
+═════════════════════════════════════ */
+/* ═════════════════════════════════════
+   RANKING — GLOBAL SYNC LAYER
+   ─────────────────────────────────────
+   By default the ranking works 100% offline using localStorage
+   (every player only sees their own device's scores).
+
+   To enable a REAL GLOBAL ranking shared between all players,
+   create a free Supabase project (https://supabase.com):
+
+   1) Create a table "scores" with columns:
+        id (int8, auto), name (text), score (int8), level (int8),
+        max_combo (int8), lines (int8), created_at (timestamptz, default now())
+   2) Enable "anon" read + insert policies (Row Level Security)
+   3) Copy your Project URL and anon public API key below.
+
+   Once SUPABASE_URL and SUPABASE_KEY are set, the game will:
+     - Push every finished run to the cloud table
+     - Pull the global Top 30 for the "GLOBAL" tab
+     - Fall back to local-only ranking automatically if the
+       network/request fails (so the game NEVER breaks offline)
+═════════════════════════════════════ */
+const SUPABASE_URL = '';   // e.g. 'https://xxxxx.supabase.co'
+const SUPABASE_KEY = '';   // anon public key
+const RANKING_ENABLED = !!(SUPABASE_URL && SUPABASE_KEY);
+
+let globalRankCache=null, globalRankLoading=false;
+
+function getRank(){try{return JSON.parse(localStorage.getItem('nb4Rank')||'[]')}catch(e){return[]}}
+
+function saveRank(){
+  if(!nick||score<=0)return null;
+  let arr=getRank();
+  const ts=Date.now();
+  arr.push({name:nick,score,level,maxCombo,lines:totalLines,ts,date:new Date().toLocaleDateString('es',{day:'2-digit',month:'2-digit',year:'2-digit'})});
+  arr.sort((a,b)=>b.score-a.score);arr=arr.slice(0,30);localStorage.setItem('nb4Rank',JSON.stringify(arr));
+
+  if(RANKING_ENABLED) pushScoreToCloud({name:nick,score,level,max_combo:maxCombo,lines:totalLines});
+
+  return arr.findIndex(e=>e.ts===ts)+1;
+}
+
+async function pushScoreToCloud(entry){
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/scores`,{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':SUPABASE_KEY,
+        'Authorization':`Bearer ${SUPABASE_KEY}`,
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify(entry)
+    });
+    globalRankCache=null; // invalidate cache so next view refetches
+  }catch(e){ /* offline or backend unreachable — local copy already saved */ }
+}
+
+async function fetchGlobalRank(){
+  if(!RANKING_ENABLED) return null;
+  if(globalRankCache) return globalRankCache;
+  try{
+    const res=await fetch(`${SUPABASE_URL}/rest/v1/scores?select=name,score,level,max_combo,lines,created_at&order=score.desc&limit=30`,{
+      headers:{ 'apikey':SUPABASE_KEY, 'Authorization':`Bearer ${SUPABASE_KEY}` }
+    });
+    if(!res.ok) return null;
+    const data=await res.json();
+    globalRankCache=data.map(e=>({
+      name:e.name, score:e.score, level:e.level, maxCombo:e.max_combo, lines:e.lines,
+      date:new Date(e.created_at).toLocaleDateString('es',{day:'2-digit',month:'2-digit',year:'2-digit'})
+    }));
+    return globalRankCache;
+  }catch(e){ return null; }
+}
+
+function setTab(t){
+  rankTab=t;
+  document.getElementById('tAll').classList.toggle('act',t==='all');
+  document.getElementById('tMe').classList.toggle('act',t==='me');
+  document.getElementById('tDay').classList.toggle('act',t==='today');
+  renderRank();
+}
+
+async function renderRank(){
+  const list=document.getElementById('rankList');
+  list.innerHTML='<div class="rank-empty">⏳<br>Cargando rangos del Nexo…</div>';
+
+  let arr=null, isGlobal=false;
+  if(rankTab==='all' && RANKING_ENABLED){
+    arr=await fetchGlobalRank();
+    isGlobal=!!arr;
+  }
+  if(!arr) arr=getRank(); // local fallback / "Mis récords" / "Hoy"
+
+  if(rankTab==='me')arr=arr.filter(e=>e.name===nick);
+  else if(rankTab==='today'){const today=new Date().toLocaleDateString('es',{day:'2-digit',month:'2-digit',year:'2-digit'});arr=arr.filter(e=>e.date===today);}
+
+  const badge=isGlobal
+    ? '<div class="rank-source global">🌐 RANKING GLOBAL EN VIVO</div>'
+    : (RANKING_ENABLED ? '<div class="rank-source local">📵 SIN CONEXIÓN — MOSTRANDO LOCAL</div>' : '<div class="rank-source local">📱 RANKING LOCAL EN ESTE DISPOSITIVO</div>');
+
+  if(!arr.length){list.innerHTML=badge+'<div class="rank-empty">👑<br>El Nexo aguarda su primer conquistador.</div>';return;}
+  const meds=['🥇','🥈','🥉'],tiers=['gold','silver','bronze'];
+  list.innerHTML=badge+arr.map((e,i)=>{
+    const ini=(e.name||'?').slice(0,2).toUpperCase();
+    const [g1,g2]=AV_GRADS[i%AV_GRADS.length];const isMe=e.name===nick;const tc=tiers[i]||'';
+    const pos=i<3?`<span style="font-size:18px">${meds[i]}</span>`:`<span style="color:rgba(255,255,255,.22);font-size:12px">#${i+1}</span>`;
+    return`<div class="rank-item ${tc}${isMe?' me':''}">
+      <div class="rank-pos">${pos}</div>
+      <div class="rank-av" style="background:linear-gradient(135deg,${g1},${g2})">${ini}</div>
+      <div class="rank-info">
+        <div class="rank-name">${esc(e.name)}${isMe?' ◀':''}</div>
+        <div class="rank-meta">Nv.${e.level||1} · ×${e.maxCombo||1} max · ${e.date||''}</div>
+      </div>
+      <div class="rank-right"><div class="rank-score">${fmt(e.score)}</div><div class="rank-detail">${e.lines||0} líneas</div></div>
+    </div>`;
+  }).join('');
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ═════════════════════════════════════
+   ACHIEVEMENTS (LOGROS)
+   Persistent across all games, stored locally.
+═════════════════════════════════════ */
+const ACHIEVEMENTS=[
+  {id:'first_clear',  icon:'✨', name:'Primer Destello',   desc:'Limpia tu primera línea',            check:s=>s.totalLinesEver>=1},
+  {id:'combo3',       icon:'🔥', name:'Reacción en Cadena', desc:'Logra un combo ×3',                  check:s=>s.bestComboEver>=3},
+  {id:'combo6',       icon:'⚡', name:'Tormenta Cuántica',   desc:'Logra un combo ×6',                  check:s=>s.bestComboEver>=6},
+  {id:'score5k',      icon:'💎', name:'Coleccionista',       desc:'Alcanza 5,000 puntos en una partida',check:s=>s.bestScoreEver>=5000},
+  {id:'score20k',     icon:'👑', name:'Soberano del Nexo',   desc:'Alcanza 20,000 puntos en una partida',check:s=>s.bestScoreEver>=20000},
+  {id:'score50k',     icon:'🌌', name:'Leyenda Dimensional', desc:'Alcanza 50,000 puntos en una partida',check:s=>s.bestScoreEver>=50000},
+  {id:'level5',       icon:'🆙', name:'En Expansión',        desc:'Llega al nivel 5',                    check:s=>s.bestLevelEver>=5},
+  {id:'level10',      icon:'🚀', name:'Arquitecto del Nexo', desc:'Llega al nivel 10',                   check:s=>s.bestLevelEver>=10},
+  {id:'games10',      icon:'🎮', name:'Veterano',            desc:'Juega 10 partidas',                   check:s=>s.gamesPlayed>=10},
+  {id:'games50',      icon:'🏅', name:'Maestro del Nexo',    desc:'Juega 50 partidas',                   check:s=>s.gamesPlayed>=50},
+  {id:'pu_user',      icon:'🌀', name:'Manipulador',         desc:'Usa 10 power-ups en total',           check:s=>s.powerupsUsed>=10},
+  {id:'lines100',     icon:'📐', name:'Arquitecto Lineal',   desc:'Elimina 100 líneas en total',         check:s=>s.totalLinesEver>=100},
+];
+
+function getStats(){
+  try{ return JSON.parse(localStorage.getItem('nb4Stats')) || defaultStats(); }
+  catch(e){ return defaultStats(); }
+}
+function defaultStats(){
+  return { bestScoreEver:0, bestLevelEver:1, bestComboEver:1, gamesPlayed:0, totalLinesEver:0, powerupsUsed:0, unlocked:[] };
+}
+function saveStats(s){ localStorage.setItem('nb4Stats', JSON.stringify(s)); }
+
+/* Call at game over to update stats and unlock any new achievements.
+   Returns array of newly unlocked achievement objects. */
+function updateStatsAndAchievements(){
+  const s=getStats();
+  s.gamesPlayed = (s.gamesPlayed||0) + 1;
+  s.bestScoreEver = Math.max(s.bestScoreEver||0, score);
+  s.bestLevelEver = Math.max(s.bestLevelEver||1, level);
+  s.bestComboEver = Math.max(s.bestComboEver||1, maxCombo);
+  s.totalLinesEver = (s.totalLinesEver||0) + totalLines;
+  s.powerupsUsed = (s.powerupsUsed||0) + powerupsUsedThisRun;
+  s.unlocked = s.unlocked||[];
+
+  const newlyUnlocked=[];
+  ACHIEVEMENTS.forEach(a=>{
+    if(!s.unlocked.includes(a.id) && a.check(s)){
+      s.unlocked.push(a.id);
+      newlyUnlocked.push(a);
+    }
+  });
+  saveStats(s);
+  return newlyUnlocked;
+}
+
+function showAchievementToast(ach){
+  notify(ach.icon+' LOGRO: '+ach.name.toUpperCase());
+}
+
+function renderAchievementsList(){
+  const s=getStats();
+  const list=document.getElementById('achList');
+  if(!list) return;
+  list.innerHTML=ACHIEVEMENTS.map(a=>{
+    const done=s.unlocked && s.unlocked.includes(a.id);
+    return `<div class="ach-item${done?' done':''}">
+      <div class="ach-icon">${a.icon}</div>
+      <div class="ach-info">
+        <div class="ach-name">${a.name}</div>
+        <div class="ach-desc">${a.desc}</div>
+      </div>
+      <div class="ach-status">${done?'✅':'🔒'}</div>
+    </div>`;
+  }).join('');
+  const pct=Math.round((s.unlocked?.length||0)/ACHIEVEMENTS.length*100);
+  document.getElementById('achProgress').textContent=`${s.unlocked?.length||0} / ${ACHIEVEMENTS.length} desbloqueados (${pct}%)`;
+  document.getElementById('achProgressBar').style.width=pct+'%';
+}
+
+/* ═════════════════════════════════════
+   DAILY MISSIONS (MISIONES DIARIAS)
+   3 random missions refresh every day,
+   tracked during the current run and
+   evaluated at game over.
+═════════════════════════════════════ */
+const MISSION_POOL=[
+  {id:'clear_lines',  icon:'📐', desc:n=>`Elimina ${n} líneas en una partida`,      vals:[5,10,18],   metric:'lines'},
+  {id:'reach_score',  icon:'💯', desc:n=>`Alcanza ${n.toLocaleString('es')} puntos en una partida`, vals:[2000,5000,10000], metric:'score'},
+  {id:'reach_combo',  icon:'🔥', desc:n=>`Logra un combo ×${n}`,                    vals:[3,5,7],     metric:'combo'},
+  {id:'reach_level',  icon:'🆙', desc:n=>`Alcanza el nivel ${n}`,                   vals:[3,5,8],     metric:'level'},
+  {id:'use_powerups', icon:'🌀', desc:n=>`Usa ${n} power-ups en una partida`,       vals:[2,4,6],     metric:'powerups'},
+  {id:'play_games',   icon:'🎮', desc:n=>`Juega ${n} partida${n>1?'s':''} hoy`,     vals:[1,3,5],     metric:'gamesToday'},
+];
+
+function todayKey(){ return new Date().toLocaleDateString('es',{day:'2-digit',month:'2-digit',year:'2-digit'}); }
+
+/* Simple deterministic PRNG seeded by date string, so all players
+   get the same missions on the same day (feels like a shared event) */
+function seededRandom(seed){
+  let h=0; for(let i=0;i<seed.length;i++){h=(h<<5)-h+seed.charCodeAt(i);h|=0;}
+  h=Math.abs(h)||1;
+  return function(){ h=(h*9301+49297)%233280; return Math.abs(h)/233280; };
+}
+
+function getDailyMissions(){
+  let data;
+  try{ data=JSON.parse(localStorage.getItem('nb4Missions')); }catch(e){ data=null; }
+  const tk=todayKey();
+  if(data && data.date===tk) return data;
+
+  // generate new missions for today
+  const rng=seededRandom('nexus-'+tk);
+  const pool=[...MISSION_POOL];
+  const chosen=[];
+  for(let i=0;i<3 && pool.length;i++){
+    const idx=Math.floor(rng()*pool.length);
+    const m=pool.splice(idx,1)[0];
+    const val=m.vals[Math.floor(rng()*m.vals.length)];
+    chosen.push({id:m.id, icon:m.icon, desc:m.desc(val), target:val, metric:m.metric, progress:0, done:false});
+  }
+  data={date:tk, missions:chosen, gamesToday:0, claimedToday:false};
+  localStorage.setItem('nb4Missions', JSON.stringify(data));
+  return data;
+}
+
+function saveDailyMissions(data){ localStorage.setItem('nb4Missions', JSON.stringify(data)); }
+
+/* Evaluate current run's stats against today's missions */
+function evaluateMissions(){
+  const data=getDailyMissions();
+  data.gamesToday=(data.gamesToday||0)+1;
+  const runStats={
+    lines:totalLines, score, combo:maxCombo, level, powerups:powerupsUsedThisRun, gamesToday:data.gamesToday
+  };
+  let anyNewlyDone=[];
+  data.missions.forEach(m=>{
+    const val=runStats[m.metric]||0;
+    m.progress=Math.max(m.progress, val);
+    const wasDone=m.done;
+    if(m.progress>=m.target) m.done=true;
+    if(m.done && !wasDone) anyNewlyDone.push(m);
+  });
+  saveDailyMissions(data);
+  return anyNewlyDone;
+}
+
+function renderMissionsList(){
+  const data=getDailyMissions();
+  const list=document.getElementById('missionsList');
+  if(!list) return;
+  list.innerHTML=data.missions.map(m=>{
+    const pct=Math.min(100, Math.round(m.progress/m.target*100));
+    return `<div class="mission-item${m.done?' done':''}">
+      <div class="mission-icon">${m.icon}</div>
+      <div class="mission-info">
+        <div class="mission-desc">${m.desc}</div>
+        <div class="mission-bar-bg"><div class="mission-bar-fill" style="width:${pct}%"></div></div>
+        <div class="mission-progress">${Math.min(m.progress,m.target).toLocaleString('es')} / ${m.target.toLocaleString('es')}</div>
+      </div>
+      <div class="mission-status">${m.done?'✅':'⏳'}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ═════════════════════════════════════
+   NAVIGATION
+═════════════════════════════════════ */
+const ALL_SCREENS=['splashScreen','gameScreen','rankScreen','achScreen','missionsScreen','tutorialScreen'];
+
+/* Central screen switcher with fade/scale transition.
+   Plays a "leaving" animation on the current visible screen,
+   then an "entering" animation on the target screen. */
+function switchScreen(toId, onShown){
+  const current=ALL_SCREENS.find(id=>!document.getElementById(id).classList.contains('hidden'));
+  const target=document.getElementById(toId);
+
+  function activateTarget(){
+    ALL_SCREENS.forEach(id=>{
+      const el=document.getElementById(id);
+      el.classList.remove('entering','leaving');
+      if(id!==toId) el.classList.add('hidden');
+    });
+    target.classList.remove('hidden');
+    target.scrollTop=0;
+    // restart animation
+    target.classList.remove('entering'); 
+    void target.offsetWidth; // force reflow
+    target.classList.add('entering');
+    if(onShown) onShown();
+  }
+
+  if(current && current!==toId){
+    const curEl=document.getElementById(current);
+    curEl.classList.add('leaving');
+    setTimeout(activateTarget, 180);
+  } else {
+    activateTarget();
+  }
+}
+
+function showSplash(){ switchScreen('splashScreen'); gameActive=false; cancelDrag(); stopMusic(); }
+function showRank(){ switchScreen('rankScreen', ()=>{ rankTab='all'; setTab('all'); }); }
+function showAchievements(){ switchScreen('achScreen', renderAchievementsList); }
+function showMissions(){
+  switchScreen('missionsScreen', ()=>{
+    renderMissionsList();
+    document.getElementById('missionsSub').textContent='Se renuevan cada día · '+todayKey();
+  });
+}
+function rankFromGame(){document.getElementById('goModal').classList.remove('show');showRank();}
+function showTut(){ switchScreen('tutorialScreen', startTutorial); }
+function hideTut(){ showSplash(); }
+function exitTutorial(){ stopTutorial(); showSplash(); }
+function goSplash(){document.getElementById('goModal').classList.remove('show');showSplash();}
+function restartGame(){document.getElementById('goModal').classList.remove('show');startGame();}
+
+/* ═════════════════════════════════════
+   INTERACTIVE TUTORIAL ENGINE
+   A small 5x5 guided board where the player
+   performs real actions (drag a piece, clear
+   a line, use a power-up) to learn by doing.
+═════════════════════════════════════ */
+const TUT_SIZE=5;
+const TUT_CELL=46, TUT_GAP=4, TUT_PAD=10;
+const TUT_GW=TUT_SIZE*TUT_CELL+(TUT_SIZE-1)*TUT_GAP+TUT_PAD*2;
+const TUT_GH=TUT_SIZE*TUT_CELL+(TUT_SIZE-1)*TUT_GAP+TUT_PAD*2;
+
+let tutGrid=[], tutPieces=[], tutStep=0, tutGhost=[], tutDrag=null, tutClearAnim=[];
+
+const tutCanv=document.getElementById('tutCanvas');
+const tutX=tutCanv.getContext('2d');
+
+const TUT_STEPS=[
+  {
+    icon:'👆', text:'<strong>Arrastra</strong> el cristal azul hacia el tablero para colocarlo.',
+    setup:()=>{ tutGrid=emptyTutGrid(); tutPieces=[{shape:[[1,1],[1,1]],ci:0},null,null]; },
+    arrow:{r:2,c:2}
+  },
+  {
+    icon:'🎯', text:'<strong>Completa la fila</strong> de abajo arrastrando los cristales que faltan.',
+    setup:()=>{
+      tutGrid=emptyTutGrid();
+      // pre-fill last row except 2 cells
+      for(let c=0;c<TUT_SIZE;c++) tutGrid[TUT_SIZE-1][c]= (c<3) ? 4 : null;
+      tutPieces=[{shape:[[1,1]],ci:4},null,null];
+    },
+    arrow:{r:TUT_SIZE-1,c:3}
+  },
+  {
+    icon:'🔥', text:'<strong>¡Bien!</strong> Al completar una línea se elimina y ganas puntos. Coloca otra pieza para seguir.',
+    setup:()=>{
+      tutGrid=emptyTutGrid();
+      for(let c=0;c<TUT_SIZE-1;c++) tutGrid[1][c]=2;
+      tutPieces=[{shape:[[1]],ci:2},null,null];
+    },
+    arrow:{r:1,c:TUT_SIZE-1}
+  },
+  {
+    icon:'⚡', text:'Los <strong>power-ups</strong> te ayudan en momentos difíciles. ¡Toca el botón Quantum para destruir todos los bloques de un color!',
+    setup:()=>{
+      tutGrid=emptyTutGrid();
+      tutGrid[2][1]=0; tutGrid[2][3]=0; tutGrid[0][4]=0; tutGrid[4][0]=0;
+      tutGrid[3][3]=3; tutGrid[1][1]=5;
+      tutPieces=[null,null,null];
+    },
+    powerup:'quantum',
+    arrow:null
+  },
+];
+
+function emptyTutGrid(){ return Array.from({length:TUT_SIZE},()=>Array(TUT_SIZE).fill(null)); }
+
+function setupTutCanvas(){
+  tutCanv.width=TUT_GW*DPR; tutCanv.height=TUT_GH*DPR;
+  tutCanv.style.width=TUT_GW+'px'; tutCanv.style.height=TUT_GH+'px';
+  tutX.setTransform(1,0,0,1,0,0);
+  tutX.scale(DPR,DPR);
+}
+
+function tutCx(c){return TUT_PAD+c*(TUT_CELL+TUT_GAP);}
+function tutCy(r){return TUT_PAD+r*(TUT_CELL+TUT_GAP);}
+
+function tutCanPlace(sh,sr,sc){
+  for(let r=0;r<sh.length;r++)for(let c=0;c<sh[r].length;c++)
+    if(sh[r][c]&&(sr+r>=TUT_SIZE||sc+c>=TUT_SIZE||sr+r<0||sc+c<0||tutGrid[sr+r][sc+c]!==null))return false;
+  return true;
+}
+
+function drawTutGrid(){
+  tutX.clearRect(0,0,TUT_GW,TUT_GH);
+  rr(tutX,0,0,TUT_GW,TUT_GH,14); tutX.fillStyle='#2b3563'; tutX.fill();
+  for(let r=0;r<TUT_SIZE;r++){
+    for(let c=0;c<TUT_SIZE;c++){
+      const x=tutCx(c), y=tutCy(r), v=tutGrid[r][c];
+      const isGhost=tutGhost.some(g=>g[0]===r&&g[1]===c);
+      const clr=tutClearAnim.find(a=>a.r===r&&a.c===c);
+      if(clr){
+        const t=clr.t;
+        drawBlockOn(tutX,x,y,TUT_CELL,clr.col,1-t,1+t*.65);
+      } else if(v!==null){
+        drawBlockOn(tutX,x,y,TUT_CELL,v);
+      } else if(isGhost){
+        const ci=tutDrag?tutDrag.piece.ci:0;
+        drawBlockOn(tutX,x,y,TUT_CELL,ci,.32);
+        tutX.save();tutX.globalAlpha=.5;tutX.strokeStyle=COLORS[ci].a;tutX.lineWidth=1.8;
+        rr(tutX,x+1,y+1,TUT_CELL-2,TUT_CELL-2,4);tutX.stroke();tutX.restore();
+      } else {
+        rr(tutX,x,y,TUT_CELL,TUT_CELL,4); tutX.fillStyle='#222b54'; tutX.fill();
+        tutX.strokeStyle='rgba(255,255,255,.04)'; tutX.lineWidth=1; tutX.stroke();
+      }
+    }
+  }
+}
+
+function drawTutPiece(idx){
+  const canv=document.getElementById('tpc'+idx), ctx=canv.getContext('2d');
+  const d=Math.min(DPR,2), W=88, H=80;
+  canv.width=W*d; canv.height=H*d; canv.style.width=W+'px'; canv.style.height=H+'px';
+  ctx.setTransform(1,0,0,1,0,0); ctx.scale(d,d); ctx.clearRect(0,0,W,H);
+  const piece=tutPieces[idx]; if(!piece) return;
+  const sh=piece.shape, rows=sh.length, cols=sh[0].length;
+  const cs=Math.min(17,Math.floor(Math.min((W-12)/cols,(H-12)/rows)));
+  const gp=2, tw=cols*cs+(cols-1)*gp, th=rows*cs+(rows-1)*gp;
+  const ox=(W-tw)/2, oy=(H-th)/2;
+  sh.forEach((row,r)=>row.forEach((v,c)=>{ if(!v)return; drawBlockOn(ctx,ox+c*(cs+gp),oy+r*(cs+gp),cs,piece.ci); }));
+}
+
+function renderTutPieces(){
+  for(let i=0;i<3;i++){
+    const slot=document.getElementById('tps'+i);
+    slot.classList.toggle('empty',!tutPieces[i]);
+    slot.classList.toggle('dragging',tutDrag&&tutDrag.idx===i);
+    drawTutPiece(i);
+  }
+}
+
+/* Drag handling for tutorial board (mirrors main game, smaller scope) */
+const tutDragCanv=document.getElementById('dragCanvas'); // reuse same floating canvas
+function tutStartDrag(idx,sx,sy){
+  if(!tutPieces[idx]) return;
+  if(AC===null) getAC().resume();
+  snd_grab();
+  tutDrag={idx, piece:{...tutPieces[idx]}, canDrop:false, dropR:0, dropC:0};
+  const sh=tutDrag.piece.shape, rows=sh.length, cols=sh[0].length;
+  const CS=TUT_CELL+6, GP=3;
+  const dw=cols*CS+(cols-1)*GP, dh=rows*CS+(rows-1)*GP;
+  tutDragCanv.width=dw*DPR; tutDragCanv.height=dh*DPR;
+  tutDragCanv.style.width=dw+'px'; tutDragCanv.style.height=dh+'px';
+  const dctx=tutDragCanv.getContext('2d');
+  dctx.setTransform(1,0,0,1,0,0); dctx.scale(DPR,DPR); dctx.clearRect(0,0,dw,dh);
+  sh.forEach((row,r)=>row.forEach((v,c)=>{ if(!v)return; dctx.save();dctx.globalAlpha=.92; drawBlockOn(dctx,c*(CS+GP),r*(CS+GP),CS,tutDrag.piece.ci); dctx.restore(); }));
+  tutPositionDrag(sx,sy);
+  tutDragCanv.style.display='block';
+  tutUpdateGhost(sx,sy);
+  renderTutPieces(); drawTutGrid();
+}
+function tutPositionDrag(sx,sy){
+  const sh=tutDrag.piece.shape, rows=sh.length, cols=sh[0].length;
+  const CS=TUT_CELL+6, GP=3;
+  const dw=cols*CS+(cols-1)*GP, dh=rows*CS+(rows-1)*GP;
+  tutDragCanv.style.left=(sx-dw/2)+'px';
+  tutDragCanv.style.top=(sy-dh-30)+'px';
+}
+function tutUpdateGhost(sx,sy){
+  const rect=tutCanv.getBoundingClientRect();
+  const scaleX=TUT_GW/rect.width, scaleY=TUT_GH/rect.height;
+  const sh=tutDrag.piece.shape, rows=sh.length, cols=sh[0].length;
+  const bx=(sx-rect.left)*scaleX, by=(sy-rect.top)*scaleY;
+  const anchorR=Math.round((by-TUT_PAD)/(TUT_CELL+TUT_GAP)-rows/2+.5);
+  const anchorC=Math.round((bx-TUT_PAD)/(TUT_CELL+TUT_GAP)-cols/2+.5);
+  tutGhost=[];
+  if(tutCanPlace(sh,anchorR,anchorC)){
+    sh.forEach((row,dr)=>row.forEach((v,dc)=>{if(v)tutGhost.push([anchorR+dr,anchorC+dc]);}));
+    tutDrag.canDrop=true; tutDrag.dropR=anchorR; tutDrag.dropC=anchorC;
+  } else { tutDrag.canDrop=false; }
+}
+function tutEndDrag(sx,sy){
+  if(!tutDrag) return;
+  const rect=tutCanv.getBoundingClientRect();
+  const overBoard=(sx>=rect.left&&sx<=rect.right&&sy>=rect.top&&sy<=rect.bottom);
+  if(overBoard&&tutDrag.canDrop&&tutCanPlace(tutDrag.piece.shape,tutDrag.dropR,tutDrag.dropC)){
+    tutDoPlace(tutDrag.piece,tutDrag.dropR,tutDrag.dropC,tutDrag.idx);
+  } else { snd_tick(); }
+  tutDrag=null; tutGhost=[];
+  tutDragCanv.style.display='none';
+  renderTutPieces(); drawTutGrid();
+}
+function tutCancelDrag(){
+  tutDrag=null; tutGhost=[];
+  tutDragCanv.style.display='none';
+  renderTutPieces(); drawTutGrid();
+}
+
+function tutDoPlace(piece,sr,sc,idx){
+  piece.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v)tutGrid[sr+r][sc+c]=piece.ci;}));
+  tutPieces[idx]=null;
+  snd_place();
+  renderTutPieces(); drawTutGrid();
+  setTimeout(tutDoClear,80);
+}
+
+function tutDoClear(){
+  const fullR=[], fullC=[];
+  for(let r=0;r<TUT_SIZE;r++) if(tutGrid[r].every(v=>v!==null)) fullR.push(r);
+  for(let c=0;c<TUT_SIZE;c++){ let f=true; for(let r=0;r<TUT_SIZE;r++) if(tutGrid[r][c]===null){f=false;break;} if(f) fullC.push(c); }
+  if(!fullR.length&&!fullC.length){ tutCheckStepComplete(); return; }
+  const cellMap=new Map();
+  fullR.forEach(r=>{for(let c=0;c<TUT_SIZE;c++)cellMap.set(r+','+c,{r,c,col:tutGrid[r][c]});});
+  fullC.forEach(c=>{for(let r=0;r<TUT_SIZE;r++)if(!cellMap.has(r+','+c))cellMap.set(r+','+c,{r,c,col:tutGrid[r][c]});});
+  snd_clear(fullR.length+fullC.length);
+  tutClearAnim=[]; cellMap.forEach(({r,c,col})=>tutClearAnim.push({r,c,col,t:0}));
+  const t0=performance.now();
+  function step(ts){
+    const dt=(ts-t0)/420;
+    tutClearAnim.forEach(a=>a.t=Math.min(1,dt)); drawTutGrid();
+    if(dt<1){ requestAnimationFrame(step); return; }
+    cellMap.forEach(({r,c})=>tutGrid[r][c]=null); tutClearAnim=[];
+    drawTutGrid();
+    showComboTxt(fullR.length+fullC.length, 2, tutCanv);
+    tutCheckStepComplete();
+  }
+  requestAnimationFrame(step);
+}
+
+function tutCheckStepComplete(){
+  // Step completes when: all tray pieces used (drag steps) handled via tutAdvance call sites
+  if(tutPieces.every(p=>p===null) && TUT_STEPS[tutStep] && !TUT_STEPS[tutStep].powerup){
+    setTimeout(tutAdvance, 500);
+  }
+}
+
+/* Setup PU events for tutorial-only step */
+function tutSetupPUListeners(){
+  const map={quantum:'tpuQ',void:'tpuV',nova:'tpuN',freeze:'tpuF'};
+  Object.entries(map).forEach(([type,id])=>{
+    const el=document.getElementById(id);
+    el.onclick=()=>{
+      if(!TUT_STEPS[tutStep] || TUT_STEPS[tutStep].powerup!==type) return;
+      // Quantum effect on tutorial board: clear all cells matching color 0
+      const cells=[];
+      for(let r=0;r<TUT_SIZE;r++)for(let c=0;c<TUT_SIZE;c++)if(tutGrid[r][c]===0)cells.push({r,c,col:0});
+      if(!cells.length) return;
+      snd_pu();
+      tutClearAnim=cells.map(o=>({...o,t:0}));
+      const t0=performance.now();
+      function step(ts){
+        const dt=(ts-t0)/380;
+        tutClearAnim.forEach(a=>a.t=Math.min(1,dt)); drawTutGrid();
+        if(dt<1){ requestAnimationFrame(step); return; }
+        cells.forEach(({r,c})=>tutGrid[r][c]=null); tutClearAnim=[];
+        drawTutGrid();
+        notify('⚡ ¡PERFECTO! ASÍ FUNCIONAN LOS POWER-UPS');
+        setTimeout(tutAdvance,600);
+      }
+      requestAnimationFrame(step);
+    };
+  });
+}
+
+function tutPositionArrow(){
+  const arrowEl=document.getElementById('tutArrow');
+  const step=TUT_STEPS[tutStep];
+  if(!step || !step.arrow){ arrowEl.classList.remove('show'); return; }
+  const rect=tutCanv.getBoundingClientRect();
+  const parentRect=tutCanv.parentElement.getBoundingClientRect();
+  const x=tutCx(step.arrow.c)+TUT_CELL/2;
+  const y=tutCy(step.arrow.r);
+  const scaleX=rect.width/TUT_GW, scaleY=rect.height/TUT_GH;
+  arrowEl.style.left=((x*scaleX)+(rect.left-parentRect.left)-14)+'px';
+  arrowEl.style.top=((y*scaleY)+(rect.top-parentRect.top)-34)+'px';
+  arrowEl.classList.add('show');
+}
+
+function tutRenderStep(){
+  const step=TUT_STEPS[tutStep];
+  document.getElementById('tutStepCounter').textContent=`Paso ${tutStep+1} / ${TUT_STEPS.length}`;
+  document.getElementById('tutCardIcon').textContent=step.icon;
+  document.getElementById('tutCardText').innerHTML=step.text;
+  const card=document.getElementById('tutCard');
+  card.style.animation='none'; void card.offsetWidth; card.style.animation='tutCardIn .4s cubic-bezier(.22,1,.36,1)';
+
+  const puWrap=document.getElementById('tutPUWrap');
+  if(step.powerup){
+    puWrap.style.opacity='1'; puWrap.style.pointerEvents='auto';
+    Object.values({quantum:'tpuQ',void:'tpuV',nova:'tpuN',freeze:'tpuF'}).forEach(id=>document.getElementById(id).classList.remove('active'));
+    document.getElementById({quantum:'tpuQ',void:'tpuV',nova:'tpuN',freeze:'tpuF'}[step.powerup]).classList.add('active');
+  } else {
+    puWrap.style.opacity='.35'; puWrap.style.pointerEvents='none';
+  }
+
+  const nextBtn=document.getElementById('tutNextBtn');
+  if(tutStep===TUT_STEPS.length-1){ nextBtn.style.display='none'; }
+  else { nextBtn.style.display='block'; nextBtn.textContent='SALTAR PASO →'; }
+
+  step.setup();
+  renderTutPieces(); drawTutGrid();
+  setTimeout(tutPositionArrow,50);
+}
+
+function tutAdvance(){
+  if(tutStep<TUT_STEPS.length-1){ tutStep++; tutRenderStep(); }
+  else { notify('🎓 ¡TUTORIAL COMPLETADO! YA ERES UN MAESTRO DEL NEXO'); setTimeout(exitTutorial,1200); }
+}
+function tutSkipStep(){ tutAdvance(); }
+
+function startTutorial(){
+  setupTutCanvas();
+  tutStep=0; tutDrag=null; tutGhost=[]; tutClearAnim=[];
+  tutSetupPUListeners();
+  tutRenderStep();
+  setupTutPieceEvents();
+}
+function stopTutorial(){ tutCancelDrag(); }
+
+function setupTutPieceEvents(){
+  for(let i=0;i<3;i++){
+    const slot=document.getElementById('tps'+i);
+    slot.ontouchstart=(e)=>{ e.preventDefault(); e.stopPropagation(); if(!tutPieces[i])return; const t=e.touches[0]; tutStartDrag(i,t.clientX,t.clientY); };
+    slot.onmousedown=(e)=>{ e.preventDefault(); if(!tutPieces[i])return; tutStartDrag(i,e.clientX,e.clientY); };
+  }
+}
+
+/* Hook into global drag move/end so tutorial drag works alongside main game's */
+document.addEventListener('touchmove',e=>{
+  if(!tutDrag) return; e.preventDefault();
+  const t=e.touches[0]; tutPositionDrag(t.clientX,t.clientY); tutUpdateGhost(t.clientX,t.clientY); drawTutGrid();
+},{passive:false});
+document.addEventListener('touchend',e=>{
+  if(!tutDrag) return; e.preventDefault();
+  const t=e.changedTouches[0]; tutEndDrag(t.clientX,t.clientY);
+},{passive:false});
+document.addEventListener('mousemove',e=>{
+  if(!tutDrag) return; tutPositionDrag(e.clientX,e.clientY); tutUpdateGhost(e.clientX,e.clientY); drawTutGrid();
+});
+document.addEventListener('mouseup',e=>{
+  if(!tutDrag) return; tutEndDrag(e.clientX,e.clientY);
+});
+window.addEventListener('resize',()=>{ if(!document.getElementById('tutorialScreen').classList.contains('hidden')) setTimeout(tutPositionArrow,100); });
+
+
+/* ═════════════════════════════════════
+   GAME OVER
+═════════════════════════════════════ */
+function showOver(){
+  gameActive=false;cancelDrag();
+  const pos=saveRank();
+
+  const newAch=updateStatsAndAchievements();
+  const newMissions=evaluateMissions();
+
+  document.getElementById('moSc').textContent=fmt(score);
+  document.getElementById('moLv').textContent=level;
+  document.getElementById('moCm').textContent='×'+maxCombo;
+  document.getElementById('moLn').textContent=totalLines;
+  const badge=document.getElementById('moBadge');
+  if(pos===1){badge.textContent='🥇 NUEVO RÉCORD MUNDIAL';badge.style.cssText='background:linear-gradient(135deg,#ffe177,#f5933b);color:#3a2a00';}
+  else if(pos&&pos<=3){badge.textContent='🏆 TOP '+pos+' GLOBAL';badge.style.cssText='background:linear-gradient(135deg,#a05ce0,#7a3bbf);color:#fff';}
+  else if(score>0){badge.textContent='👾 PARTIDA REGISTRADA';badge.style.cssText='background:rgba(255,255,255,.06);color:rgba(255,255,255,.4)';}
+  else{badge.textContent='';badge.style.cssText='background:transparent';}
+  if(pos===1)celebrate();
+  document.getElementById('goModal').classList.add('show');
+
+  /* Show achievement/mission toasts sequentially after the modal appears */
+  let toastDelay=900;
+  newAch.forEach(a=>{ setTimeout(()=>showAchievementToast(a), toastDelay); toastDelay+=2400; });
+  newMissions.forEach(m=>{ setTimeout(()=>notify('🎯 MISIÓN COMPLETADA: '+m.desc.toUpperCase()), toastDelay); toastDelay+=2400; });
+}
+
+/* ═════════════════════════════════════
+   START GAME
+═════════════════════════════════════ */
+function genPiece(){return{shape:SHAPES[Math.floor(Math.random()*SHAPES.length)],ci:Math.floor(Math.random()*COLORS.length)};}
+
+/* ═════════════════════════════════════
+   SMART PIECE GENERATOR
+   - Weighs piece difficulty by level (small/simple pieces early,
+     bigger/complex pieces later)
+   - Guarantees the generated SET of 3 pieces has at least one
+     piece that fits SOMEWHERE on the current board
+   - Avoids impossible game-over right after a refill
+═════════════════════════════════════ */
+const EASY_SHAPES_IDX = []; // 1-3 cell shapes (low difficulty)
+const MED_SHAPES_IDX = [];  // 4 cell shapes
+const HARD_SHAPES_IDX = []; // 5+ cell / complex shapes
+SHAPES.forEach((sh,i)=>{
+  const n=sh.flat().filter(Boolean).length;
+  if(n<=2) EASY_SHAPES_IDX.push(i);
+  else if(n<=4) MED_SHAPES_IDX.push(i);
+  else HARD_SHAPES_IDX.push(i);
+});
+
+function pickShapeIndexByLevel(){
+  // Probability weights shift toward bigger/harder pieces as level increases
+  const lvl=Math.min(level,12);
+  const hardW = Math.min(.42, 0.04*lvl);      // grows with level, capped
+  const medW  = 0.38;
+  const easyW = 1 - hardW - medW;
+  const roll=Math.random();
+  let pool;
+  if(roll < easyW) pool = EASY_SHAPES_IDX;
+  else if(roll < easyW+medW) pool = MED_SHAPES_IDX;
+  else pool = HARD_SHAPES_IDX;
+  if(!pool.length) pool = MED_SHAPES_IDX.length?MED_SHAPES_IDX:EASY_SHAPES_IDX;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function genPieceSmart(){
+  return { shape: SHAPES[pickShapeIndexByLevel()], ci: Math.floor(Math.random()*COLORS.length) };
+}
+
+function boardFits(shape){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(canPlace(shape,r,c)) return true;
+  return false;
+}
+
+/* Generate a fresh set of 3 pieces such that AT LEAST ONE
+   fits on the current board right now. Tries a bounded number
+   of attempts, then falls back to guaranteed-small pieces. */
+function genPieceSet(){
+  const MAX_TRIES=40;
+  for(let attempt=0; attempt<MAX_TRIES; attempt++){
+    const set=[genPieceSmart(),genPieceSmart(),genPieceSmart()];
+    if(set.some(p=>boardFits(p.shape))) return set;
+  }
+  // Fallback: force-include a guaranteed-fit small piece
+  const fallback=[genPieceSmart(),genPieceSmart()];
+  // find a small shape that fits
+  let safePiece=null;
+  for(const idx of [...EASY_SHAPES_IDX,...MED_SHAPES_IDX]){
+    const sh=SHAPES[idx];
+    if(boardFits(sh)){ safePiece={shape:sh,ci:Math.floor(Math.random()*COLORS.length)}; break; }
+  }
+  if(!safePiece) safePiece={shape:[[1]],ci:Math.floor(Math.random()*COLORS.length)}; // 1x1 always fits unless board is 100% full
+  fallback.push(safePiece);
+  // shuffle position so it's not always last
+  for(let i=fallback.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fallback[i],fallback[j]]=[fallback[j],fallback[i]];}
+  return fallback;
+}
+
+function toggleSnd(){if(AC===null)getAC().resume();soundOn=!soundOn;document.getElementById('sndDot').className='snd-dot'+(soundOn?' on':'');document.getElementById('sndLbl').textContent=soundOn?'Sonido encendido':'Sonido silenciado';if(soundOn)tone(440,'triangle',.1,.1);}
+
+/* ═════════════════════════════════════
+   EXTRAS PANEL TOGGLE
+   Hides/shows combo, level, XP and power-ups
+   to keep the default view minimal (Block Blast style)
+═════════════════════════════════════ */
+function toggleExtras(){
+  const panel=document.getElementById('bbExtras');
+  const btn=document.getElementById('extraToggle');
+  const open=panel.classList.toggle('open');
+  btn.classList.toggle('open',open);
+  if(AC===null)getAC().resume();
+  snd_tick();
+}
+
+function startGame(){
+  nick=(document.getElementById('nickIn').value.trim().toUpperCase()||'NEXUS').slice(0,14);
+  document.getElementById('hN').textContent=nick;
+  switchScreen('gameScreen');
+  document.getElementById('goModal').classList.remove('show');
+  if(AC===null)getAC();
+  grid=Array.from({length:ROWS},()=>Array(COLS).fill(null));
+  score=0;combo=1;maxCombo=1;level=1;xp=0;totalLines=0;powerupsUsedThisRun=0;
+  selIdx=null;activePU=null;ghostCells=[];clearAnimCells=[];
+  cancelDrag();
+  puCounts={quantum:3,void:2,nova:2,freeze:1};
+  document.getElementById('hS').textContent='0';
+  document.getElementById('hB').textContent=fmt(best);
+  document.getElementById('hC').textContent='×1';
+  document.getElementById('hL').textContent='1';
+  document.getElementById('hX').textContent='0 / 500 XP';
+  document.getElementById('hBar').style.width='0%';
+  ['cQ','cV','cN','cF'].forEach((id,i)=>document.getElementById(id).textContent=[3,2,2,1][i]);
+  Object.values(PU_BTNS).forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById('puHint').classList.remove('show');
+  document.getElementById('bbExtras').classList.remove('open');
+  document.getElementById('extraToggle').classList.remove('open');
+  goAnim=false;goX_.clearRect(0,0,goC.width,goC.height);
+  pieces=genPieceSet();
+  gameActive=true;
+  updatePips();renderPieces();drawGrid();
+  snd_start();notify('⚡ NEXO INICIADO — ¡SUERTE, '+nick+'!');
+  startMusic();
+}
+
+/* ═════════════════════════════════════
+   INIT
+═════════════════════════════════════ */
+nick='';
+document.getElementById('hB').textContent=fmt(best);
+document.getElementById('nickIn').addEventListener('keydown',e=>{if(e.key==='Enter')startGame();});
+/* Build pips */
+(()=>{const c=document.getElementById('comboPips');for(let i=0;i<MAX_PIPS;i++){const p=document.createElement('div');p.className='combo-pip';c.appendChild(p);}})();
+setupPieceEvents();
+
+/* ═════════════════════════════════════
+   PWA — SERVICE WORKER + INSTALL PROMPT
+═════════════════════════════════════ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+let deferredInstallEvent=null;
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault();
+  deferredInstallEvent=e;
+  const btn=document.getElementById('installBtn');
+  if(btn) btn.style.display='block';
+});
+
+function installApp(){
+  if(!deferredInstallEvent){ return; }
+  deferredInstallEvent.prompt();
+  deferredInstallEvent.userChoice.then((choice)=>{
+    if(choice.outcome==='accepted'){
+      notify('📲 ¡NEXUS BLAST INSTALADO!');
+      const btn=document.getElementById('installBtn');
+      if(btn) btn.style.display='none';
+    }
+    deferredInstallEvent=null;
+  });
+}
+
+window.addEventListener('appinstalled',()=>{
+  const btn=document.getElementById('installBtn');
+  if(btn) btn.style.display='none';
+});
+
+/* iOS doesn't support beforeinstallprompt — show manual instructions
+   if running in Safari on iOS and not already installed (standalone) */
+(function(){
+  const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone=window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  if(isIOS && !isStandalone){
+    const hint=document.getElementById('iosInstallHint');
+    if(hint) hint.style.display='block';
+  }
+})();
+
+</script>
+</body>
+</html>
